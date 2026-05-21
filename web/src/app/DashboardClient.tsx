@@ -80,9 +80,9 @@ export default function DashboardClient({ agents, logs, stats, serverStats }: { 
         </div>
         <div className={styles.statCard}>
           <div className={styles.statInfo}>
-            <span className={styles.statTitle}>PERLU PERHATIAN</span>
-            <span className={styles.statValue} style={{color: 'var(--accent-danger)'}}>{stats.broken}</span>
-            <span style={{fontSize:'0.72rem',color:'#6b7280',marginTop:'2px'}}>Rusak + Garansi bermasalah</span>
+            <span className={styles.statTitle}>OFFLINE / RUSAK</span>
+            <span className={styles.statValue} style={{color: 'var(--accent-danger)'}}>{stats.offlineBroken}</span>
+            <span style={{fontSize:'0.72rem',color:'#6b7280',marginTop:'2px'}}>Perangkat offline & rusak</span>
           </div>
           <div className={`${styles.statIcon} ${styles.iconRed}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>

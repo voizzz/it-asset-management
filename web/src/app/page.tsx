@@ -64,7 +64,7 @@ export default async function Home() {
     return diff <= threshold; // expired (diff < 0) or expiring soon (diff <= 30d)
   }).length;
 
-  const issueAgents = brokenAgents + warrantyAttention;
+  const offlineBroken = offlineAgents + brokenAgents;
 
   const logs = await db.all(`SELECT * FROM AuditLog ORDER BY timestamp DESC LIMIT 10`);
 
@@ -134,7 +134,7 @@ export default async function Home() {
           stats={{
             total: agents.length,
             online: onlineAgents,
-            broken: issueAgents,
+            offlineBroken: offlineBroken,
             repair: repairAgents,
             spare: spareAgents
           }} 

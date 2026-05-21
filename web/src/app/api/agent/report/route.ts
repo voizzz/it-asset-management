@@ -12,7 +12,14 @@ export async function POST(request: Request) {
     const db = await getDb();
     
     const now = new Date().toISOString();
-    const id = data.hostname;
+    
+    // Enforce uppercase
+    const safeHostname = data.hostname.trim().toUpperCase();
+    const safeCategory = (data.category || 'PC').trim().toUpperCase();
+    const safeSerial = (data.serialNumber || '').trim().toUpperCase();
+    const safeMac = (data.macAddress || '').trim().toUpperCase();
+    
+    const id = safeHostname;
     
     const existing = await db.get(`SELECT * FROM Agent WHERE id = ?`, [id]);
     
@@ -34,18 +41,18 @@ export async function POST(request: Request) {
         category=excluded.category,
         currentUser=excluded.currentUser
     `, [
-      id, data.hostname, data.os, data.ipAddress, data.macAddress, data.cpu, data.gpu, data.motherboard, data.serialNumber, data.ramMb, data.diskGb, now, now, 'online', data.category || 'PC', 0, data.currentUser || ''
+      id, safeHostname, data.os, data.ipAddress, safeMac, data.cpu, data.gpu, data.motherboard, safeSerial, data.ramMb, data.diskGb, now, now, 'online', safeCategory, 0, data.currentUser || ''
     ]);
 
     if (!existing) {
-      await logAudit(id, 'CREATED', 'AGENT_AUTO', { hostname: data.hostname, category: data.category || 'PC' });
+      await logAudit(id, 'CREATED', 'AGENT_AUTO', { hostname: safeHostname, category: safeCategory });
     } else {
       const changes: Record<string, any> = {};
       if (existing.ipAddress !== data.ipAddress) changes.ipAddress = { from: existing.ipAddress, to: data.ipAddress };
       if (existing.currentUser !== data.currentUser) changes.currentUser = { from: existing.currentUser, to: data.currentUser };
       if (existing.status !== 'online') changes.status = { from: existing.status, to: 'online' };
       if (existing.os !== data.os) changes.os = { from: existing.os, to: data.os };
-      if (existing.macAddress !== data.macAddress) changes.macAddress = { from: existing.macAddress, to: data.macAddress };
+      if (existing.macAddress !== safeMac) changes.macAddress = { from: existing.macAddress, to: safeMac };
       
       if (Object.keys(changes).length > 0) {
         await logAudit(id, 'UPDATED', 'AGENT_AUTO', changes);
@@ -56,7 +63,8 @@ export async function POST(request: Request) {
     if (data.monitors && Array.isArray(data.monitors)) {
       for (const mon of data.monitors) {
         if (!mon.serialNumber) continue;
-        const monHostname = `MON-${mon.serialNumber}`;
+        const monSerial = String(mon.serialNumber).trim().toUpperCase();
+        const monHostname = `MON-${monSerial}`;
         const existingMon = await db.get(`SELECT * FROM Agent WHERE id = ?`, [monHostname]);
         
         await db.run(`
@@ -67,15 +75,14 @@ export async function POST(request: Request) {
             status=excluded.status,
             currentUser=excluded.currentUser,
             location=excluded.location
-        `, [
-          monHostname, monHostname, 'N/A', '', '', mon.serialNumber, mon.brand || '', mon.model || '', now, now, 'in-use', 'Monitor', 0, data.currentUser || '', data.hostname
+          monHostname, monHostname, 'N/A', '', '', monSerial, (mon.brand || '').trim().toUpperCase(), (mon.model || '').trim().toUpperCase(), now, now, 'in-use', 'MONITOR', 0, data.currentUser || '', safeHostname
         ]);
 
         if (!existingMon) {
-          await logAudit(monHostname, 'CREATED', 'AGENT_AUTO', { hostname: monHostname, category: 'Monitor' });
+          await logAudit(monHostname, 'CREATED', 'AGENT_AUTO', { hostname: monHostname, category: 'MONITOR' });
         } else {
           const monChanges: Record<string, any> = {};
-          if (existingMon.location !== data.hostname) monChanges.location = { from: existingMon.location, to: data.hostname };
+          if (existingMon.location !== safeHostname) monChanges.location = { from: existingMon.location, to: safeHostname };
           if (existingMon.currentUser !== (data.currentUser || '')) monChanges.currentUser = { from: existingMon.currentUser, to: data.currentUser || '' };
           if (existingMon.status !== 'in-use') monChanges.status = { from: existingMon.status, to: 'in-use' };
           

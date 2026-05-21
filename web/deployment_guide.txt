@@ -1,0 +1,113 @@
+==============================================================
+PANDUAN DEPLOYMENT IT ASSET MANAGEMENT (ITAM) - MULTI OS
+==============================================================
+
+Aplikasi ini dibangun menggunakan:
+- Frontend & Backend: Next.js (React)
+- Database: SQLite (itam_v2.db)
+- Runtime: Node.js (v18.17 atau lebih baru)
+
+Berikut adalah panduan lengkap untuk deploy aplikasi ini ke Production (Ubuntu Server) maupun Windows Server/Local agar bisa diakses oleh komputer lain di jaringan.
+
+--------------------------------------------------------------
+PERSIAPAN AWAL (Berlaku untuk Ubuntu & Windows)
+--------------------------------------------------------------
+1. Install Node.js
+   - Download dan install Node.js versi LTS (v20.x atau v22.x) dari nodejs.org.
+   - Pastikan 'npm' (Node Package Manager) juga terinstall.
+2. Pindahkan Folder Aplikasi
+   - Copy folder 'web' (yang berisi package.json, next.config.mjs, dll) ke server.
+   - Letakkan di lokasi yang aman, misalnya:
+     - Ubuntu: /var/www/itam
+     - Windows: C:\itam-web
+
+--------------------------------------------------------------
+PANDUAN DEPLOYMENT - UBUNTU SERVER (LINUX)
+--------------------------------------------------------------
+
+Langkah 1: Install Dependencies Server
+Buka Terminal / SSH ke Ubuntu Server, jalankan:
+$ sudo apt update
+$ sudo apt install -y build-essential python3
+
+Langkah 2: Install Dependencies Aplikasi
+Masuk ke folder aplikasi dan install:
+$ cd /var/www/itam
+$ npm install
+
+Langkah 3: Build Aplikasi untuk Production
+$ npm run build
+
+Langkah 4: Install PM2 (Process Manager)
+PM2 berguna agar aplikasi tetap berjalan di background dan otomatis nyala kalau server restart.
+$ sudo npm install -g pm2
+
+Langkah 5: Jalankan Aplikasi dengan PM2
+$ pm2 start npm --name "itam-web" -- run start
+$ pm2 save
+$ pm2 startup
+(Jalankan perintah sudo env... yang muncul di layar setelah menjalankan pm2 startup)
+
+Langkah 6: Akses Aplikasi & Setup Firewall
+Secara default, Next.js berjalan di port 3000.
+Izinkan port 3000 di firewall (UFW):
+$ sudo ufw allow 3000
+Aplikasi sekarang bisa diakses di jaringan lokal lewat: http://<IP_UBUNTU>:3000
+
+*Opsional (NGINX Reverse Proxy): 
+Jika ingin memakai domain / tanpa port 3000, install nginx:
+$ sudo apt install nginx
+Konfigurasi file nginx (/etc/nginx/sites-available/itam) untuk proxy_pass ke http://localhost:3000.
+
+
+--------------------------------------------------------------
+PANDUAN DEPLOYMENT - WINDOWS SERVER / LOCAL PC
+--------------------------------------------------------------
+
+Langkah 1: Install Dependencies
+Buka Command Prompt (Run as Administrator) atau PowerShell, masuk ke folder aplikasi:
+> cd C:\itam-web
+> npm install
+
+Langkah 2: Build Aplikasi untuk Production
+> npm run build
+
+Langkah 3: Install PM2 (Process Manager)
+Agar aplikasi tetap jalan di background tanpa command prompt harus terus terbuka:
+> npm install -g pm2
+> pm2 start npm --name "itam-web" -- run start
+
+Langkah 4: Jadikan PM2 sebagai Windows Service (Agar nyala otomatis saat PC nyala)
+> npm install -g pm2-windows-service
+> pm2-service-install -n PM2
+Ikuti instruksi di layar, tekan enter untuk pengaturan default.
+Setelah itu jalankan:
+> pm2 save
+
+Langkah 5: Akses Aplikasi & Buka Firewall Windows
+Aplikasi berjalan di port 3000. Agar komputer lain di jaringan bisa membuka aplikasi ini:
+1. Buka "Windows Defender Firewall with Advanced Security".
+2. Klik "Inbound Rules" -> "New Rule...".
+3. Pilih "Port" -> Next.
+4. Pilih "TCP", isi "Specific local ports" dengan 3000 -> Next.
+5. Pilih "Allow the connection" -> Next.
+6. Beri nama rule (misal: "ITAM Port 3000") -> Finish.
+Aplikasi sekarang bisa diakses di jaringan lokal lewat: http://<IP_WINDOWS>:3000
+
+--------------------------------------------------------------
+CATATAN PENTING & MAINTENANCE
+--------------------------------------------------------------
+1. Database (itam_v2.db):
+   - Database SQLite otomatis terbuat/tersimpan di dalam folder root aplikasi (sejajar dengan package.json).
+   - Jangan lupa melakukan BACKUP file 'itam_v2.db' ini secara berkala, karena semua data aset, user, dan log ada di dalamnya.
+
+2. Desktop Agent (Client):
+   - Jika mengubah alamat IP Server, pastikan untuk men-download ulang script Agent dari dashboard dan mendistribusikannya ke PC user, atau edit file .bat / script agent yang lama dan ubah alamat URL IP-nya ke IP Server yang baru.
+
+3. Restart Aplikasi:
+   - Jika Anda mengubah logo atau konfigurasi env, Anda bisa restart aplikasi dengan command:
+     pm2 restart itam-web
+
+==============================================================
+SELESAI. SISTEM ITAM SIAP DIGUNAKAN DI PRODUCTION.
+==============================================================

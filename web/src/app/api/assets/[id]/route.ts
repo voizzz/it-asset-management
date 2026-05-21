@@ -43,6 +43,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     
     const existing = await db.get(`SELECT * FROM Agent WHERE id = ?`, [resolvedParams.id]);
     
+    // Enforce uppercase for consistency
+    const safeHostname = (data.hostname || '').trim().toUpperCase();
+    const safeCategory = (data.category || '').trim().toUpperCase();
+    const safeBrand = (data.brand || '').trim().toUpperCase();
+    const safeModel = (data.model || '').trim().toUpperCase();
+    const safeSerial = (data.serialNumber || '').trim().toUpperCase();
+    const safeMac = (data.macAddress || '').trim().toUpperCase();
+    
     // For manual assets, we allow updating specific fields
     await db.run(`
       UPDATE Agent SET 
@@ -63,8 +71,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         warrantyMonths = ?
       WHERE id = ?
     `, [
-      data.hostname, data.category, data.ipAddress, data.macAddress,
-      data.brand, data.model, data.serialNumber, data.location, data.notes, data.status, data.currentUser, data.realUser, data.extension,
+      safeHostname, safeCategory, data.ipAddress, safeMac,
+      safeBrand, safeModel, safeSerial, data.location, data.notes, data.status, data.currentUser, data.realUser, data.extension,
       data.purchaseDate || null, data.warrantyMonths ? parseInt(data.warrantyMonths) : null,
       resolvedParams.id
     ]);
@@ -74,8 +82,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       const fieldsToCheck = ['hostname', 'category', 'ipAddress', 'macAddress', 'brand', 'model', 'serialNumber', 'location', 'notes', 'status', 'currentUser', 'realUser', 'extension', 'purchaseDate', 'warrantyMonths'];
       
       for (const field of fieldsToCheck) {
-        if (existing[field] !== data[field] && (existing[field] !== null || data[field] !== '')) {
-          changes[field] = { from: existing[field], to: data[field] };
+        let newValue = data[field];
+        if (['hostname', 'category', 'brand', 'model', 'serialNumber', 'macAddress'].includes(field)) {
+          newValue = (newValue || '').trim().toUpperCase();
+        }
+        if (existing[field] !== newValue && (existing[field] !== null || newValue !== '')) {
+          changes[field] = { from: existing[field], to: newValue };
         }
       }
 

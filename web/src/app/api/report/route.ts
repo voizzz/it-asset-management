@@ -52,7 +52,7 @@ export async function GET() {
 
   const categories: Record<string, number> = {};
   for (const a of agents) {
-    const cat = a.category || 'PC';
+    const cat = (a.category || 'PC').toUpperCase();
     categories[cat] = (categories[cat] || 0) + 1;
   }
 
@@ -65,24 +65,23 @@ export async function GET() {
     let warrantyCell = '<span style="color:#9ca3af">-</span>';
     if (a.purchaseDate && a.warrantyMonths) {
       const wi = getWarrantyInfo(a.purchaseDate, a.warrantyMonths);
-      warrantyCell = `<span style="color:${wi.color};font-weight:600;font-size:10px">${wi.label}</span>`;
+      warrantyCell = `<span style="color:${wi.color};font-weight:600;font-size:10px;text-transform:uppercase">${wi.label}</span>`;
     }
     return `
       <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f8fafc'}">
-        <td style="padding:7px 10px;color:#9ca3af;font-size:10px;text-align:center">${i + 1}</td>
-        <td style="padding:7px 10px;font-weight:700;color:#111827;font-size:11px">${a.hostname}</td>
-        <td style="padding:7px 10px;color:#374151;font-size:11px">${a.category || 'PC'}</td>
-        <td style="padding:7px 10px;color:#374151;font-size:11px">${a.brand || '-'}</td>
-        <td style="padding:7px 10px;color:#374151;font-size:11px">${a.model || '-'}</td>
-        <td style="padding:7px 10px;color:#6b7280;font-size:10px;font-family:monospace">${a.serialNumber || '-'}</td>
-        <td style="padding:7px 10px;color:#6b7280;font-size:10px;font-family:monospace">${a.ipAddress || '-'}</td>
-        <td style="padding:7px 10px;color:#374151;font-size:11px">${a.realUser || a.currentUser || '-'}</td>
-        <td style="padding:7px 10px">
-          <span style="background:${sc.bg};color:${sc.color};padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;white-space:nowrap;display:inline-block">
+        <td style="padding:7px 8px;color:#9ca3af;font-size:10px;text-align:center">${i + 1}</td>
+        <td style="padding:7px 8px;font-weight:700;color:#111827;font-size:11px;text-transform:uppercase">${a.hostname}</td>
+        <td style="padding:7px 8px">
+          <span style="background:${sc.bg};color:${sc.color};padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;white-space:nowrap;display:inline-block">
             ${(a.status || 'in-use').toUpperCase()}
           </span>
         </td>
-        <td style="padding:7px 10px;font-size:10px">${warrantyCell}</td>
+        <td style="padding:7px 8px;font-size:10px">${warrantyCell}</td>
+        <td style="padding:7px 8px;color:#374151;font-size:11px;text-transform:uppercase">${a.category || 'PC'}</td>
+        <td style="padding:7px 8px;color:#374151;font-size:11px;text-transform:uppercase">${a.brand || '-'}</td>
+        <td style="padding:7px 8px;color:#374151;font-size:11px;text-transform:uppercase">${a.model || '-'}</td>
+        <td style="padding:7px 8px;color:#6b7280;font-size:10px;font-family:monospace;text-transform:uppercase">${a.serialNumber || '-'}</td>
+        <td style="padding:7px 8px;color:#6b7280;font-size:10px;font-family:monospace">${a.ipAddress || '-'}</td>
       </tr>`;
   }).join('');
 
@@ -242,9 +241,9 @@ export async function GET() {
       <div class="stat-sub">Siap dialokasikan</div>
     </div>
     <div class="stat-card" style="border-top:3px solid #dc2626">
-      <div class="stat-label">Perlu Perhatian</div>
-      <div class="stat-val" style="color:#dc2626">${broken + repair + expiredAgents.length + warningAgents.length}</div>
-      <div class="stat-sub">Rusak / Garansi bermasalah</div>
+      <div class="stat-label">Offline / Terkendala</div>
+      <div class="stat-val" style="color:#dc2626">${offline + broken + repair}</div>
+      <div class="stat-sub">${offline} Offline, ${broken} Rusak, ${repair} Servis</div>
     </div>
   </div>
 
@@ -310,16 +309,15 @@ export async function GET() {
     <table class="asset-table">
       <thead>
         <tr>
-          <th style="width:28px;text-align:center">#</th>
+          <th style="width:24px;text-align:center">#</th>
           <th>Hostname</th>
+          <th>Status</th>
+          <th>Garansi</th>
           <th>Kategori</th>
           <th>Brand</th>
           <th>Model</th>
           <th>Serial Number</th>
           <th>IP Address</th>
-          <th>Pengguna</th>
-          <th>Status</th>
-          <th>Garansi</th>
         </tr>
       </thead>
       <tbody>${tableRows}</tbody>
