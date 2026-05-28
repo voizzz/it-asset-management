@@ -7,10 +7,6 @@ web/build/
 # Prisma / Database
 web/prisma/*.db
 web/prisma/*.db-journal
-web/*.db
-web/*.db-journal
-*.db
-*.db-journal
 
 # Environment Variables
 .env

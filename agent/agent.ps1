@@ -22,6 +22,14 @@ if ($env:AgentPath -and ($env:AgentPath -ne $targetScript)) {
 }
 # --------------------------
 
+# Generate or Read Unique Agent ID
+$idFile = "$installDir\id.txt"
+if (-not (Test-Path $idFile)) {
+    if (-not (Test-Path $installDir)) { New-Item -ItemType Directory -Force -Path $installDir | Out-Null }
+    [guid]::NewGuid().ToString() | Out-File -FilePath $idFile -Encoding UTF8 -Force
+}
+$agentId = (Get-Content -Path $idFile).Trim()
+
 # Collect Data
 $hostname = [System.Net.Dns]::GetHostName()
 $os = (Get-CimInstance Win32_OperatingSystem).Caption
@@ -95,7 +103,35 @@ foreach ($m in $wmiMonitors) {
     }
 }
 
+# Collect Software Inventory
+$softwareList = @()
+$uninstallPaths = @(
+    "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+)
+foreach ($path in $uninstallPaths) {
+    $software = Get-ItemProperty $path -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -ne $null } | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate
+    foreach ($app in $software) {
+        $softwareList += @{
+            name = $app.DisplayName
+            version = $app.DisplayVersion
+            publisher = $app.Publisher
+            installDate = $app.InstallDate
+        }
+    }
+}
+
+$uniqueSoftware = @()
+$seen = @{}
+foreach ($s in $softwareList) {
+    if (-not $seen[$s.name]) {
+        $seen[$s.name] = $true
+        $uniqueSoftware += $s
+    }
+}
+
 $payload = @{
+    agentId = $agentId
     hostname = $hostname
     os = $os
     category = $category
@@ -109,11 +145,12 @@ $payload = @{
     ramMb = $ramMb
     diskGb = $diskGb
     monitors = $monitorsData
+    softwareList = $uniqueSoftware
 }
 
 $jsonPayload = $payload | ConvertTo-Json -Depth 10
 
-$jsonPayload | Out-File "$PSScriptRoot\debug_payload.json" -ErrorAction SilentlyContinue
+$jsonPayload | Out-File "C:\Users\Asus\Documents\Asset-Management\agent\debug_payload.json"
 
 # Send Data
 Write-Host "Sending data to $serverUrl..."
