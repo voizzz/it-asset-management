@@ -35,6 +35,10 @@ function getCpuUsage(): Promise<string> {
 
 import LogoutButton from '@/components/LogoutButton';
 import LogoIcon from '@/components/LogoIcon';
+<<<<<<< HEAD
+=======
+import Sidebar from '@/components/Sidebar';
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 import DashboardClient from './DashboardClient';
 
 export const dynamic = 'force-dynamic';
@@ -68,6 +72,20 @@ export default async function Home() {
 
   const logs = await db.all(`SELECT * FROM AuditLog ORDER BY timestamp DESC LIMIT 10`);
 
+<<<<<<< HEAD
+=======
+  let openTicketsCount = 0;
+  let recentTickets: any[] = [];
+  try {
+    const ticketRow = await db.get(`SELECT COUNT(*) as count FROM Ticket WHERE status = 'Open' OR status = 'In Progress'`);
+    openTicketsCount = ticketRow?.count || 0;
+    
+    recentTickets = await db.all(`SELECT * FROM Ticket ORDER BY createdAt DESC LIMIT 5`);
+  } catch (e) {
+    // Ticket table might not exist in old migrations, ignore silently
+  }
+
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const dbPath = path.resolve(process.cwd(), 'itam_v2.db');
   let dbSizeMB = '0.00';
   try {
@@ -99,6 +117,7 @@ export default async function Home() {
 
   return (
     <div className={styles.dashboard}>
+<<<<<<< HEAD
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
           {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
@@ -126,17 +145,29 @@ export default async function Home() {
           <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
         </div>
       </aside>
+=======
+        <Sidebar logoName={logoName} />
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       
       <main className={styles.main}>
         <DashboardClient 
           agents={agents} 
           logs={logs} 
+<<<<<<< HEAD
+=======
+          recentTickets={recentTickets}
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
           stats={{
             total: agents.length,
             online: onlineAgents,
             offlineBroken: offlineBroken,
             repair: repairAgents,
+<<<<<<< HEAD
             spare: spareAgents
+=======
+            spare: spareAgents,
+            openTickets: openTicketsCount
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
           }} 
           serverStats={serverStats}
         />

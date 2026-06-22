@@ -63,6 +63,88 @@ export function getDb(): Promise<Database> {
           value TEXT
         );
 
+<<<<<<< HEAD
+=======
+        CREATE TABLE IF NOT EXISTS Software (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          version TEXT,
+          publisher TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS AgentSoftware (
+          agentId TEXT,
+          softwareId TEXT,
+          installDate TEXT,
+          PRIMARY KEY (agentId, softwareId)
+        );
+
+        CREATE TABLE IF NOT EXISTS License (
+          id TEXT PRIMARY KEY,
+          softwareName TEXT,
+          licenseKey TEXT,
+          totalSeats INTEGER,
+          expiryDate TEXT,
+          notes TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS Employee (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          department TEXT,
+          email TEXT,
+          status TEXT DEFAULT 'active'
+        );
+
+        CREATE TABLE IF NOT EXISTS AssetAssignment (
+          id TEXT PRIMARY KEY,
+          agentId TEXT,
+          employeeId TEXT,
+          assignedAt DATETIME,
+          returnedAt DATETIME,
+          notes TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS Consumable (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          category TEXT,
+          quantity INTEGER,
+          minQuantity INTEGER,
+          location TEXT,
+          notes TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS ConsumableTransaction (
+          id TEXT PRIMARY KEY,
+          consumableId TEXT,
+          employeeId TEXT,
+          quantityChange INTEGER,
+          reason TEXT,
+          timestamp DATETIME
+        );
+
+        CREATE TABLE IF NOT EXISTS Ticket (
+          id TEXT PRIMARY KEY,
+          title TEXT,
+          description TEXT,
+          status TEXT DEFAULT 'Open',
+          priority TEXT DEFAULT 'Medium',
+          category TEXT,
+          agentId TEXT,
+          employeeId TEXT,
+          createdAt DATETIME,
+          updatedAt DATETIME
+        );
+
+        CREATE TABLE IF NOT EXISTS TicketComment (
+          id TEXT PRIMARY KEY,
+          ticketId TEXT,
+          content TEXT,
+          createdAt DATETIME
+        );
+
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
         INSERT INTO Settings (key, value) 
         SELECT 'logoName', 'ITAM'
         WHERE NOT EXISTS (SELECT 1 FROM Settings WHERE key = 'logoName');
@@ -88,6 +170,11 @@ export function getDb(): Promise<Database> {
 
       try { await db.run(`ALTER TABLE Agent ADD COLUMN category TEXT DEFAULT 'PC'`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN isManual BOOLEAN DEFAULT 0`); } catch (e) {}
+<<<<<<< HEAD
+=======
+      try { await db.run(`ALTER TABLE Agent ADD COLUMN gpu TEXT`); } catch (e) {}
+      try { await db.run(`ALTER TABLE Agent ADD COLUMN motherboard TEXT`); } catch (e) {}
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       try { await db.run(`ALTER TABLE Agent ADD COLUMN brand TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN model TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN location TEXT`); } catch (e) {}
@@ -103,6 +190,10 @@ export function getDb(): Promise<Database> {
       try { await db.run(`ALTER TABLE Agent ADD COLUMN extension TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN purchaseDate TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN warrantyMonths INTEGER`); } catch (e) {}
+<<<<<<< HEAD
+=======
+      try { await db.run(`ALTER TABLE Agent ADD COLUMN employeeId TEXT`); } catch (e) {}
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
       return db;
     })();

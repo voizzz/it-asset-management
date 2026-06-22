@@ -3,6 +3,10 @@ import styles from './logs.module.css';
 import ExportCsvButton from '@/components/ExportCsvButton';
 import LogoutButton from '@/components/LogoutButton';
 import LogoIcon from '@/components/LogoIcon';
+<<<<<<< HEAD
+=======
+import Sidebar from '@/components/Sidebar';
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +46,7 @@ export default async function Logs() {
 
   return (
     <div className={styles.dashboard}>
+<<<<<<< HEAD
         <aside className={styles.sidebar}>
           <div className={styles.logo}>
             {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
@@ -69,6 +74,9 @@ export default async function Logs() {
             <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
           </div>
       </aside>
+=======
+        <Sidebar logoName={logoName} />
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       
       <main className={styles.main}>
         <header className={styles.header}>

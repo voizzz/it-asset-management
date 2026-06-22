@@ -42,7 +42,31 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+<<<<<<< HEAD
 export default function DashboardClient({ agents, logs, stats, serverStats }: { agents: any[], logs: any[], stats: any, serverStats: any }) {
+=======
+function TicketStatusBadge({ status }: { status: string }) {
+  let bg = '#f3f4f6', color = '#4b5563', dot = '#6b7280';
+  if (status === 'Open') { bg = '#fef2f2'; color = '#dc2626'; dot = '#dc2626'; }
+  if (status === 'In Progress') { bg = '#fffbeb'; color = '#d97706'; dot = '#d97706'; }
+  if (status === 'Resolved') { bg = '#d1fae5'; color = '#059669'; dot = '#059669'; }
+  if (status === 'Closed') { bg = '#f3f4f6'; color = '#374151'; dot = '#6b7280'; }
+  
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+      padding: '0.25rem 0.75rem', borderRadius: '9999px',
+      fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.05em',
+      background: bg, color: color,
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, display: 'inline-block', flexShrink: 0 }} />
+      {status.toUpperCase()}
+    </span>
+  );
+}
+
+export default function DashboardClient({ agents, logs, stats, serverStats, recentTickets = [] }: { agents: any[], logs: any[], stats: any, serverStats: any, recentTickets?: any[] }) {
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
@@ -106,6 +130,11 @@ export default function DashboardClient({ agents, logs, stats, serverStats }: { 
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           </div>
         </div>
+<<<<<<< HEAD
+=======
+        
+
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       </section>
 
       {/* Warranty expiry warning banner */}
@@ -120,19 +149,31 @@ export default function DashboardClient({ agents, logs, stats, serverStats }: { 
       {/* Main Grid Content */}
       <div className={styles.contentGrid}>
         
+<<<<<<< HEAD
         {/* Left Column: Recent Assets */}
         <div className={styles.recentAssetsCard}>
           <h3 className={styles.cardHeading}>Aset Terbaru & Status</h3>
+=======
+        {/* Left Column: Recent Tickets */}
+        <div className={styles.recentAssetsCard}>
+          <h3 className={styles.cardHeading}>Tiket Terbaru</h3>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
           <div className={styles.tableWrapper}>
             <table className={styles.modernTable}>
               <thead>
                 <tr>
+<<<<<<< HEAD
                   <th>HOSTNAME</th>
+=======
+                  <th>JUDUL TIKET</th>
+                  <th>PRIORITAS</th>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                   <th>STATUS</th>
                   <th style={{textAlign: 'right'}}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
+<<<<<<< HEAD
                 {agents.slice(0, 5).map(agent => (
                   <tr key={agent.id}>
                     <td>
@@ -165,6 +206,37 @@ export default function DashboardClient({ agents, logs, stats, serverStats }: { 
                     </td>
                   </tr>
                 ))}
+=======
+                {recentTickets.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>Belum ada tiket.</td>
+                  </tr>
+                ) : (
+                  recentTickets.map(ticket => (
+                    <tr key={ticket.id}>
+                      <td>
+                        <div style={{fontWeight: 700, color: '#1f2937', letterSpacing: '0.01em'}}>{ticket.title}</div>
+                        <div suppressHydrationWarning style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.2rem'}}>{ticket.assetId || 'Umum'} • Dibuat {new Date(ticket.createdAt).toLocaleDateString()}</div>
+                      </td>
+                      <td>
+                        <span style={{
+                          fontSize: '0.72rem', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                          background: ticket.priority === 'High' ? 'rgba(239, 68, 68, 0.1)' : ticket.priority === 'Medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                          color: ticket.priority === 'High' ? '#dc2626' : ticket.priority === 'Medium' ? '#d97706' : '#059669'
+                        }}>
+                          {ticket.priority}
+                        </span>
+                      </td>
+                      <td>
+                        <TicketStatusBadge status={ticket.status} />
+                      </td>
+                      <td style={{textAlign: 'right'}}>
+                        <Link href={`/tickets/${ticket.id}`} className={styles.detailsBtn}>Detail</Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
               </tbody>
             </table>
           </div>
@@ -245,7 +317,11 @@ export default function DashboardClient({ agents, logs, stats, serverStats }: { 
                       <span className={styles.logActionBadge} style={{ background: log.action === 'CREATED' ? '#d1fae5' : log.action === 'DELETED' ? '#fee2e2' : '#dbeafe', color: log.action === 'CREATED' ? '#059669' : log.action === 'DELETED' ? '#dc2626' : '#2563eb' }}>
                         {log.action === 'CREATED' ? 'DIBUAT' : log.action === 'UPDATED' ? 'DIUPDATE' : 'DIHAPUS'}
                       </span>
+<<<<<<< HEAD
                       <span className={styles.logTime}>{new Date(log.timestamp).toLocaleString()}</span>
+=======
+                      <span className={styles.logTime} suppressHydrationWarning>{new Date(log.timestamp).toLocaleString()}</span>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     </div>
                     <p className={styles.logDesc}>Aset <strong style={{textTransform:'uppercase'}}>{log.agentId}</strong> telah {log.action === 'CREATED' ? 'ditambahkan' : log.action === 'UPDATED' ? 'diperbarui' : 'dihapus'}.</p>
                     <div className={styles.logSource}>

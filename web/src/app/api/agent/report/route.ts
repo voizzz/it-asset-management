@@ -74,9 +74,15 @@ export async function POST(request: Request) {
             lastSeen=excluded.lastSeen,
             status=excluded.status,
             currentUser=excluded.currentUser,
+<<<<<<< HEAD
             location=excluded.location
           monHostname, monHostname, 'N/A', '', '', monSerial, (mon.brand || '').trim().toUpperCase(), (mon.model || '').trim().toUpperCase(), now, now, 'in-use', 'MONITOR', 0, data.currentUser || '', safeHostname
         ]);
+=======
+            location=excluded.location`,
+          [monHostname, monHostname, 'N/A', '', '', monSerial, (mon.brand || '').trim().toUpperCase(), (mon.model || '').trim().toUpperCase(), now, now, 'in-use', 'MONITOR', 0, data.currentUser || '', safeHostname]
+        );
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
         if (!existingMon) {
           await logAudit(monHostname, 'CREATED', 'AGENT_AUTO', { hostname: monHostname, category: 'MONITOR' });
@@ -93,6 +99,43 @@ export async function POST(request: Request) {
       }
     }
 
+<<<<<<< HEAD
+=======
+    // Process installed software
+    if (data.softwareList && Array.isArray(data.softwareList)) {
+      // Clear old software mappings for this agent
+      await db.run(`DELETE FROM AgentSoftware WHERE agentId = ?`, [id]);
+      
+      for (const sw of data.softwareList) {
+        if (!sw.name) continue;
+        const name = String(sw.name).trim();
+        const version = String(sw.version || '').trim();
+        const publisher = String(sw.publisher || '').trim();
+        const installDate = String(sw.installDate || '').trim();
+        
+        // Find existing software by name and version
+        let existingSw = await db.get(`SELECT id FROM Software WHERE name = ? AND version = ?`, [name, version]);
+        let swId;
+        
+        if (!existingSw) {
+          swId = require('crypto').randomUUID();
+          await db.run(
+            `INSERT INTO Software (id, name, version, publisher) VALUES (?, ?, ?, ?)`,
+            [swId, name, version, publisher]
+          );
+        } else {
+          swId = existingSw.id;
+        }
+        
+        // Add mapping
+        await db.run(
+          `INSERT INTO AgentSoftware (agentId, softwareId, installDate) VALUES (?, ?, ?) ON CONFLICT(agentId, softwareId) DO NOTHING`,
+          [id, swId, installDate]
+        );
+      }
+    }
+
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
     // Auto Log Cleanup based on retention settings
     try {
       const retentionSetting = await db.get(`SELECT value FROM Settings WHERE key = 'logRetentionDays'`);

@@ -1,8 +1,11 @@
+<<<<<<< HEAD
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
+=======
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,6 +15,7 @@ datasource db {
 }
 
 model Agent {
+<<<<<<< HEAD
   id         String   @id @default(uuid())
   hostname   String   @unique
   os         String
@@ -23,4 +27,134 @@ model Agent {
   lastSeen   DateTime @default(now())
   createdAt  DateTime @default(now())
   status     String   @default("online")
+=======
+  id             String   @id @default(uuid())
+  hostname       String   @unique
+  os             String
+  ipAddress      String?
+  macAddress     String?
+  cpu            String?
+  gpu            String?
+  motherboard    String?
+  ramMb          Int?
+  diskGb         Int?
+  lastSeen       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  status         String   @default("online")
+  category       String?
+  isManual       Int?
+  brand          String?
+  model          String?
+  serialNumber   String?
+  location       String?
+  notes          String?
+  currentUser    String?
+  realUser       String?
+  purchaseDate   String?
+  warrantyMonths Int?
+  employeeId     String?
+}
+
+model Software {
+  id        String   @id @default(uuid())
+  name      String
+  version   String?
+  publisher String?
+}
+
+model AgentSoftware {
+  agentId     String
+  softwareId  String
+  installDate String?
+  @@id([agentId, softwareId])
+}
+
+model License {
+  id           String   @id @default(uuid())
+  softwareName String
+  licenseKey   String?
+  totalSeats   Int      @default(0)
+  expiryDate   String?
+  notes        String?
+}
+
+model Employee {
+  id         String   @id @default(uuid())
+  name       String
+  department String?
+  email      String?
+  status     String   @default("active")
+}
+
+model AssetAssignment {
+  id         String   @id @default(uuid())
+  agentId    String
+  employeeId String
+  assignedAt DateTime @default(now())
+  returnedAt DateTime?
+  notes      String?
+}
+
+model Consumable {
+  id          String   @id @default(uuid())
+  name        String
+  category    String?
+  quantity    Int      @default(0)
+  minQuantity Int      @default(0)
+  location    String?
+  notes       String?
+}
+
+model ConsumableTransaction {
+  id             String   @id @default(uuid())
+  consumableId   String
+  employeeId     String?
+  quantityChange Int
+  reason         String?
+  timestamp      DateTime @default(now())
+}
+
+model AuditLog {
+  id        Int       @id @default(autoincrement())
+  agentId   String?
+  action    String?
+  source    String?
+  changes   String?
+  timestamp DateTime  @default(now())
+}
+
+model Settings {
+  key   String @id
+  value String
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("user")
+  createdAt    DateTime @default(now())
+}
+
+model Ticket {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  status      String   @default("Open") // Open, In Progress, Resolved, Closed
+  priority    String   @default("Medium") // Low, Medium, High, Critical
+  category    String?  // Hardware, Software, Network, etc.
+  
+  agentId     String?
+  employeeId  String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TicketComment {
+  id        String   @id @default(uuid())
+  ticketId  String
+  content   String
+  createdAt DateTime @default(now())
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 }

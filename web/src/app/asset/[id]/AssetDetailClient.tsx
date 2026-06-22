@@ -5,7 +5,11 @@ import styles from './detail.module.css';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 
+<<<<<<< HEAD
 export default function AssetDetailClient({ agent }: { agent: any }) {
+=======
+export default function AssetDetailClient({ agent, software = [], assignments = [], employees = [] }: { agent: any, software?: any[], assignments?: any[], employees?: any[] }) {
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const router = useRouter();
   const [showEdit, setShowEdit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -39,6 +43,44 @@ export default function AssetDetailClient({ agent }: { agent: any }) {
     }
   };
 
+<<<<<<< HEAD
+=======
+  const [checkoutEmployeeId, setCheckoutEmployeeId] = useState('');
+  const [checkoutNotes, setCheckoutNotes] = useState('');
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const handleCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkoutEmployeeId) return alert('Select an employee');
+    setIsCheckingOut(true);
+    try {
+      const res = await fetch(`/api/assets/${agent.id}/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId: checkoutEmployeeId, notes: checkoutNotes })
+      });
+      if (!res.ok) throw new Error('Failed to checkout');
+      setCheckoutEmployeeId('');
+      setCheckoutNotes('');
+      router.refresh();
+    } catch (e) {
+      alert('Failed to checkout asset');
+    }
+    setIsCheckingOut(false);
+  };
+
+  const handleCheckin = async () => {
+    if (!confirm('Return this asset to inventory?')) return;
+    try {
+      const res = await fetch(`/api/assets/${agent.id}/checkin`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to check in');
+      router.refresh();
+    } catch (e) {
+      alert('Failed to check in asset');
+    }
+  };
+
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const handleEditSave = async (e: any) => {
     e.preventDefault();
     try {
@@ -148,6 +190,12 @@ export default function AssetDetailClient({ agent }: { agent: any }) {
           </div>
         )}
 
+<<<<<<< HEAD
+=======
+      </div>
+
+      <div className={styles.cardGrid} style={{ marginTop: '1.5rem' }}>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
         {/* Card 4: Additional Details */}
         <div className={styles.card}>
           <h3>
@@ -184,6 +232,79 @@ export default function AssetDetailClient({ agent }: { agent: any }) {
             })()}
           </ul>
         </div>
+<<<<<<< HEAD
+=======
+
+
+        {/* Card 5: Assignment & Checkout */}
+        <div className={styles.card}>
+          <h3>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            Assignment & Checkout
+          </h3>
+          
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+            {agent.employeeId ? (
+              <div>
+                <p style={{ margin: 0, fontWeight: 600, color: 'var(--accent-primary)' }}>Currently Assigned To:</p>
+                {(() => {
+                  const currAssign = assignments.find(a => !a.returnedAt);
+                  return <p style={{ margin: '0.5rem 0', fontSize: '1.1rem', fontWeight: 700 }}>{currAssign?.employeeName || 'Unknown Employee'}</p>;
+                })()}
+                <button onClick={handleCheckin} style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
+                  Check In (Return to Inventory)
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-secondary)' }}>Asset is currently available.</p>
+                <select required value={checkoutEmployeeId} onChange={e => setCheckoutEmployeeId(e.target.value)} style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+                  <option value="">-- Select Employee --</option>
+                  {employees.map((e: any) => (
+                    <option key={e.id} value={e.id}>{e.name} ({e.department || 'No Dept'})</option>
+                  ))}
+                </select>
+                <input type="text" placeholder="Checkout notes..." value={checkoutNotes} onChange={e => setCheckoutNotes(e.target.value)} style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+                <button type="submit" disabled={isCheckingOut} style={{ padding: '0.6rem 1rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
+                  {isCheckingOut ? 'Assigning...' : 'Checkout Asset'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div className={styles.sectionTitle}>Assignment History</div>
+          <ul className={styles.list} style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            {assignments.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No assignment history</li>}
+            {assignments.map((a: any) => (
+              <li key={a.id} style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ fontWeight: 600 }}>{a.employeeName}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  {new Date(a.assignedAt).toLocaleDateString()} - {a.returnedAt ? new Date(a.returnedAt).toLocaleDateString() : 'Present'}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Card 6: Installed Software */}
+        <div className={styles.card}>
+          <h3>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Installed Software
+          </h3>
+          <ul className={styles.list} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {software.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No software recorded.</li>}
+            {software.map((sw: any, i: number) => (
+              <li key={i} style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ fontWeight: 600 }}>{sw.name}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  {sw.publisher} {sw.version && `v${sw.version}`}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       </div>
 
       {/* Edit Modal */}
@@ -215,7 +336,16 @@ export default function AssetDetailClient({ agent }: { agent: any }) {
                   {editData.category !== 'Network Device' && (
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>User (Real Name)</label>
+<<<<<<< HEAD
                       <input type="text" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={editData.realUser} onChange={e => setEditData({...editData, realUser: e.target.value})} placeholder="e.g. Budi Santoso" />
+=======
+                      <select style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', appearance: 'auto', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={editData.realUser} onChange={e => setEditData({...editData, realUser: e.target.value})}>
+                        <option value="">Select Employee...</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.name}>{emp.name}</option>
+                        ))}
+                      </select>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     </div>
                   )}
                   {editData.category !== 'Network Device' && editData.category !== 'IP Phone' && (

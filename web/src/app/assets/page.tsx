@@ -6,6 +6,10 @@ import styles from '../page.module.css';
 import { QRCodeSVG } from 'qrcode.react';
 import LogoutButton from '@/components/LogoutButton';
 import LogoIcon from '@/components/LogoIcon';
+<<<<<<< HEAD
+=======
+import Sidebar from '@/components/Sidebar';
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
 const CATEGORIES = ['All', 'Laptop', 'PC', 'Monitor', 'Network Device', 'IP Phone', 'Server', 'Other'];
 
@@ -50,6 +54,10 @@ export default function AssetsPage() {
   const [activeTab, setActiveTab] = useState('All');
   const [agents, setAgents] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+<<<<<<< HEAD
+=======
+  const [employees, setEmployees] = useState<any[]>([]);
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const [searchQuery, setSearchQuery] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -81,11 +89,45 @@ export default function AssetsPage() {
     // Fetch settings
     fetch('/api/settings/get').then(r => r.json()).then(d => { if (d.logoName) setLogoName(d.logoName); });
     
+<<<<<<< HEAD
     // Fetch assets. For simplicity, we can reuse the agent report logic or create a GET /api/assets
     // Wait, we don't have GET /api/assets yet. Let's fetch from a new endpoint.
     fetchAssets();
   }, []);
 
+=======
+    // Check url params for quick actions from dashboard
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const action = params.get('action');
+      const searchParam = params.get('search');
+      
+      if (action === 'add') setShowAddModal(true);
+      if (action === 'scan') setShowScanner(true);
+      if (searchParam) setSearchQuery(searchParam);
+      
+      // Clean up URL so refresh doesn't trigger it again
+      if (action) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    // Fetch assets and employees
+    fetchAssets();
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch('/api/employees');
+      const data = await res.json();
+      setEmployees(data.employees || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const fetchAssets = async () => {
     try {
       const res = await fetch('/api/assets/list?t=' + Date.now());
@@ -153,6 +195,14 @@ export default function AssetsPage() {
       });
       if (!response.ok) throw new Error('API Error');
       setShowAddModal(false);
+<<<<<<< HEAD
+=======
+      setNewAsset({
+        hostname: '', category: 'Monitor', ipAddress: '', macAddress: '', brand: '',
+        model: '', serialNumber: '', location: '', notes: '', status: 'in-use', os: 'N/A',
+        currentUser: '', realUser: '', extension: '', purchaseDate: '', warrantyMonths: ''
+      });
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       fetchAssets();
     } catch (error) {
       alert('Failed to add asset');
@@ -207,6 +257,7 @@ export default function AssetsPage() {
   try {
     return (
       <div className={styles.dashboard}>
+<<<<<<< HEAD
       <aside className={styles.sidebar}>
           <div className={styles.logo}>
             {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
@@ -234,6 +285,9 @@ export default function AssetsPage() {
           <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
         </div>
       </aside>
+=======
+      <Sidebar logoName={logoName} />
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
       <section className={styles.main}>
         {errorMsg && (
@@ -350,7 +404,11 @@ export default function AssetsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+<<<<<<< HEAD
                   {['HOSTNAME', 'CATEGORY', 'SERIAL NUMBER', 'TYPE', 'STATUS', 'ACTION'].map(col => (
+=======
+                  {['HOSTNAME', 'CATEGORY', 'SERIAL NUMBER', 'USER', 'TYPE', 'STATUS', 'ACTION'].map(col => (
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     <th key={col} style={{ padding: '1rem', fontWeight: 700 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {col}
@@ -369,6 +427,10 @@ export default function AssetsPage() {
                       <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{agent.hostname}</td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }}>{agent.category || 'PC'}</td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }} title={agent.serialNumber || 'No serial'}>{agent.serialNumber || '-'}</td>
+<<<<<<< HEAD
+=======
+                      <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }}>{agent.realUser || '-'}</td>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }}>{agent.isManual ? 'Manual' : 'Agent'}</td>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -466,7 +528,16 @@ export default function AssetsPage() {
                   {newAsset.category !== 'Network Device' && (
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>User (Real Name)</label>
+<<<<<<< HEAD
                       <input type="text" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={newAsset.realUser} onChange={e => setNewAsset({...newAsset, realUser: e.target.value})} placeholder="e.g. Budi Santoso" />
+=======
+                      <select style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', appearance: 'auto', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={newAsset.realUser} onChange={e => setNewAsset({...newAsset, realUser: e.target.value})}>
+                        <option value="">Select Employee...</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.name}>{emp.name}</option>
+                        ))}
+                      </select>
+>>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     </div>
                   )}
                   {newAsset.category !== 'Network Device' && newAsset.category !== 'IP Phone' && (
