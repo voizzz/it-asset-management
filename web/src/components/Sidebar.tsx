@@ -13,6 +13,7 @@ export default function Sidebar({ logoName }: { logoName: string }) {
   const [activeReportHash, setActiveReportHash] = useState('assets');
   const safePathname = pathname || '';
   const [formsOpen, setFormsOpen] = useState(safePathname.startsWith('/forms'));
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,28 +29,57 @@ export default function Sidebar({ logoName }: { logoName: string }) {
     return () => clearInterval(interval);
   }, [pathname]);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.logo} style={{ fontSize: logoName.length > 10 ? '1.5rem' : '2rem' }}>
-        {(() => {
-          const words = logoName.trim().split(' ');
-          if (words.length > 1) {
-            const lastWord = words.pop();
-            const rest = words.join(' ');
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <div className={styles.logo} style={{ fontSize: logoName.length > 10 ? '1.5rem' : '2rem' }}>
+          {(() => {
+            const words = logoName.trim().split(' ');
+            if (words.length > 1) {
+              const lastWord = words.pop();
+              const rest = words.join(' ');
+              return (
+                <>
+                  {rest} <span style={{ display: 'block' }}>{lastWord}</span>
+                </>
+              );
+            }
             return (
               <>
-                {rest} <span style={{ display: 'block' }}>{lastWord}</span>
+                {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
               </>
             );
-          }
-          return (
-            <>
-              {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
-            </>
-          );
-        })()}
+          })()}
+        </div>
+        
+        {/* Mobile Hamburger Button */}
+        <button 
+          className={styles.mobileMenuBtn}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle Menu"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {isMobileMenuOpen ? (
+              <>
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </>
+            ) : (
+              <>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </>
+            )}
+          </svg>
+        </button>
       </div>
-      <nav className={styles.nav}>
+      <nav className={`${styles.nav} ${isMobileMenuOpen ? styles.navOpen : ''}`}>
         <Link href="/" className={`${styles.navItem} ${pathname === '/' ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
@@ -73,6 +103,10 @@ export default function Sidebar({ logoName }: { logoName: string }) {
         <Link href="/consumables" className={`${styles.navItem} ${pathname === '/consumables' ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
           Consumables
+        </Link>
+        <Link href="/stock-opname" className={`${styles.navItem} ${pathname === '/stock-opname' ? styles.active : ''}`}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Stock Opname
         </Link>
         <Link href="/tickets" className={`${styles.navItem} ${pathname === '/tickets' || safePathname.startsWith('/tickets/') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
@@ -141,18 +175,17 @@ export default function Sidebar({ logoName }: { logoName: string }) {
           </div>
           {settingsOpen && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
-              <a href="/settings#profile" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'profile' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Security</a>
               <a href="/settings#general" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'general' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>General Config</a>
               <a href="/settings#agent" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'agent' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Agent Config</a>
               <a href="/settings#account" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'account' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Accounts</a>
             </div>
           )}
         </div>
+        
+        <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingBottom: '1rem', position: 'relative', zIndex: 10 }}>
+          <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
+        </div>
       </nav>
-      
-      <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingBottom: '1rem', position: 'relative', zIndex: 10 }}>
-        <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
-      </div>
     </aside>
   );
 }

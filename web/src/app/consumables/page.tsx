@@ -93,12 +93,18 @@ export default function ConsumablesPage() {
     }
   };
 
-  const filteredConsumables = consumables.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  
+  const categories = ['All', ...Array.from(new Set(consumables.map(c => c.category).filter(Boolean)))];
+
+  const filteredConsumables = consumables.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
   
   const totalPages = Math.ceil(filteredConsumables.length / ITEMS_PER_PAGE) || 1;
   const paginatedConsumables = filteredConsumables.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -123,6 +129,17 @@ export default function ConsumablesPage() {
               />
               <svg style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
+            
+            <select 
+              value={categoryFilter} 
+              onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
+              style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', minWidth: '150px' }}
+            >
+              {categories.map(c => (
+                <option key={c as string} value={c as string}>{c === 'All' ? 'All Categories' : c}</option>
+              ))}
+            </select>
+
             <button onClick={() => setShowAdd(true)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: 'var(--accent-primary)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Item

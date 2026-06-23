@@ -175,6 +175,37 @@ export function getDb(): Promise<Database> {
         INSERT INTO Settings (key, value) 
         SELECT 'logRetentionDays', '30'
         WHERE NOT EXISTS (SELECT 1 FROM Settings WHERE key = 'logRetentionDays');
+
+        CREATE TABLE IF NOT EXISTS StockOpname (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          status TEXT DEFAULT 'Draft',
+          createdBy TEXT,
+          createdAt DATETIME,
+          completedAt DATETIME,
+          notes TEXT,
+          totalItems INTEGER DEFAULT 0,
+          foundItems INTEGER DEFAULT 0,
+          missingItems INTEGER DEFAULT 0,
+          differentItems INTEGER DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS StockOpnameItem (
+          id TEXT PRIMARY KEY,
+          opnameId TEXT,
+          agentId TEXT,
+          hostname TEXT,
+          category TEXT,
+          location TEXT,
+          currentUser TEXT,
+          brand TEXT,
+          model TEXT,
+          serialNumber TEXT,
+          status TEXT DEFAULT 'Pending',
+          notes TEXT,
+          checkedAt DATETIME,
+          checkedBy TEXT
+        );
       `);
 
       try {

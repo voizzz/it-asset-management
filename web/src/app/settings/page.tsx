@@ -40,7 +40,7 @@ export default function SettingsPage() {
       });
 
     const interval = setInterval(() => {
-      const hash = window.location.hash.replace('#', '') || 'profile';
+      const hash = window.location.hash.replace('#', '') || 'general';
       setActiveTab(current => hash !== current ? hash : current);
     }, 100);
 
@@ -184,35 +184,50 @@ export default function SettingsPage() {
     }
   };
 
-  const handleUpdateMe = async (e: React.FormEvent) => {
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editUserId, setEditUserId] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editRole, setEditRole] = useState('operator');
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
+
+  const openEditModal = (user: any) => {
+    setEditUserId(user.id);
+    setEditUsername(user.username);
+    setEditPassword(''); // Keep blank
+    setEditRole(user.role);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsUpdatingMe(true);
+    setIsUpdatingUser(true);
     try {
-      const res = await fetch('/api/users/me', {
+      const res = await fetch(`/api/users/${editUserId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          username: myUsername, 
-          password: myPassword || undefined 
+          username: editUsername, 
+          password: editPassword || undefined,
+          role: editRole
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      alert('Credentials updated successfully!');
-      setMyPassword('');
-      if (myUsername !== currentUser?.username) {
-        // If username changed, they might need to login again depending on session
+      alert('User updated successfully!');
+      setShowEditModal(false);
+      fetchUsers();
+      
+      if (editUserId === currentUser?.id && editUsername !== currentUser?.username) {
+        // If own username changed, refetch ME
         fetch('/api/auth/me').then(r => r.json()).then(d => {
-          if (d.authenticated) {
-            setCurrentUser(d.user);
-            setMyUsername(d.user.username);
-          }
+          if (d.authenticated) setCurrentUser(d.user);
         });
       }
     } catch (err: any) {
-      alert(err.message || 'Error updating credentials');
+      alert(err.message || 'Error updating user');
     }
-    setIsUpdatingMe(false);
+    setIsUpdatingUser(false);
   };
 
   const handleLogout = async () => {
@@ -229,25 +244,6 @@ export default function SettingsPage() {
           <header className={styles.header}>
             <h2>Settings</h2>
           </header>
-
-          {activeTab === 'profile' && (
-            <div id="profile" className={styles.tableSection}>
-              <h2>Security</h2>
-              <form onSubmit={handleUpdateMe} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px', marginBottom: '1rem', marginTop: '1rem' }}>
-                <div>
-                  <label style={{ color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Username</label>
-                  <input required type="text" className={styles.search} style={{ width: '100%' }} value={myUsername} onChange={e => setMyUsername(e.target.value)} />
-                </div>
-                <div>
-                  <label style={{ color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>New Password</label>
-                  <input type="password" placeholder="Leave blank to keep current" className={styles.search} style={{ width: '100%' }} value={myPassword} onChange={e => setMyPassword(e.target.value)} />
-                </div>
-                <button type="submit" disabled={isUpdatingMe} className={styles.actionBtn} style={{ padding: '0.75rem 2rem', background: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', color: 'white', marginTop: '1rem', alignSelf: 'flex-start' }}>
-                  {isUpdatingMe ? 'Saving...' : 'Update Credentials'}
-                </button>
-              </form>
-            </div>
-          )}
 
           {currentUser?.role === 'admin' && (
             <>
@@ -385,17 +381,53 @@ export default function SettingsPage() {
                           </td>
                           <td suppressHydrationWarning>{new Date(user.createdAt).toLocaleDateString()}</td>
                           <td>
-                            <button onClick={() => handleDeleteUser(user.id)} className={styles.actionBtn} style={{ padding: '0.3rem 0.8rem', fontSize: '0.75rem' }}>Delete</button>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button onClick={() => openEditModal(user)} className={styles.actionBtn} style={{ padding: '0.3rem 0.8rem', fontSize: '0.75rem', background: '#3b82f6', color: 'white', border: 'none' }}>Edit</button>
+                              <button onClick={() => handleDeleteUser(user.id)} className={styles.actionBtn} style={{ padding: '0.3rem 0.8rem', fontSize: '0.75rem' }}>Delete</button>
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  
                 </div>
               )}
             </>
           )}
         </section>
+
+        {/* Edit User Modal */}
+        {showEditModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+            <div style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: '16px', width: '100%', maxWidth: '400px', border: '1px solid var(--border-color)', position: 'relative' }}>
+              <h3 style={{ marginBottom: '1.5rem' }}>Edit User</h3>
+              <form onSubmit={handleUpdateUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Username</label>
+                  <input required type="text" className={styles.search} style={{ width: '100%' }} value={editUsername} onChange={e => setEditUsername(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>New Password</label>
+                  <input type="password" placeholder="Leave blank to keep current" className={styles.search} style={{ width: '100%' }} value={editPassword} onChange={e => setEditPassword(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Role</label>
+                  <select className={styles.search} style={{ width: '100%' }} value={editRole} onChange={e => setEditRole(e.target.value)}>
+                    <option value="operator">Operator</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+                  <button type="button" onClick={() => setShowEditModal(false)} className={styles.actionBtn} style={{ background: 'transparent', color: 'var(--text-primary)' }}>Cancel</button>
+                  <button type="submit" disabled={isUpdatingUser} className={styles.actionBtn} style={{ background: 'var(--accent-primary)', color: 'white', border: 'none' }}>
+                    {isUpdatingUser ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
   );
 }

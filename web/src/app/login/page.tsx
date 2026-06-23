@@ -38,7 +38,10 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed');
       }
 
-      router.push('/');
+      const params = new URLSearchParams(window.location.search);
+      const callbackUrl = params.get('callbackUrl') || '/';
+
+      router.push(callbackUrl);
       router.refresh();
     } catch (err: any) {
       setError(err.message);

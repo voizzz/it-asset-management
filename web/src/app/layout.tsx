@@ -11,6 +11,15 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 import { getDb } from "@/lib/db";
 
+import { Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   let appName = "ITAM";
   try {
@@ -24,7 +33,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `${appName} - Modern Asset Management`,
     description: "Lightweight and powerful IT Asset Management system",
-    themeColor: "#3b82f6",
+    manifest: '/manifest.json',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: appName,
+    },
   };
 }
 

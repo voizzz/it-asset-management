@@ -1,0 +1,16 @@
+{
+  "name": "IT Asset Management",
+  "short_name": "ITAM",
+  "description": "IT Asset Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "192x192",
+      "type": "image/x-icon"
+    }
+  ]
+}

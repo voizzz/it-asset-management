@@ -1,5 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getDb, logAudit } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { verifySession } from '@/lib/session';
+
+async function getUsername() {
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session');
+    if (sessionCookie) {
+      const payload = await verifySession(sessionCookie.value);
+      if (payload && payload.username) return payload.username as string;
+    }
+  } catch (e) {}
+  return 'Unknown';
+}
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -15,9 +29,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       await db.run(`UPDATE AssetAssignment SET returnedAt = ? WHERE id = ?`, [now, activeAssign.id]);
     }
 
-    await db.run(`UPDATE Agent SET employeeId = NULL, status = 'spare' WHERE id = ?`, [id]);
+    await db.run(`UPDATE Agent SET employeeId = NULL, realUser = NULL, status = 'spare' WHERE id = ?`, [id]);
     
-    await logAudit(id, 'UPDATED', 'MANUAL_WEB', { assignment: { action: 'checkin' } });
+    const username = await getUsername();
+    await logAudit(id, 'UPDATED', `MANUAL_WEB:${username}`, { assignment: { action: 'checkin' } });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

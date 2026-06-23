@@ -31,8 +31,19 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
     warrantyMonths: agent.warrantyMonths || '',
     employeeId: agent.employeeId || ''
   });
+  
+  const [returnToScanId, setReturnToScanId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const scanId = params.get('returnToScan');
+      if (scanId) {
+        setReturnToScanId(scanId);
+        setShowEdit(true);
+      }
+    }
+    
     fetchAttachments();
     fetch('/api/auth/me').then(r => r.json()).then(d => {
       if (d.user) setCurrentUser(d.user);
@@ -147,6 +158,23 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
         body: JSON.stringify(editData)
       });
       if (!res.ok) throw new Error('Failed to update');
+      
+      // If we came from the scanner, update the stock opname item to reflect the data change
+      if (returnToScanId) {
+        try {
+          await fetch(`/api/stock-opname/${returnToScanId}/items`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ itemId: agent.id, status: 'Found', notes: 'Update Data' })
+          });
+        } catch (scanErr) {
+          console.error("Failed to update scanner note:", scanErr);
+        }
+        alert('Data telah dirubah!');
+        router.push(`/stock-opname/${returnToScanId}/scan`);
+        return; // Skip normal behavior
+      }
+
       setShowEdit(false);
       router.refresh(); // Refresh server component data
     } catch (e) {
@@ -620,6 +648,40 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
         </div>
       </div>
       
+      {/* Return to Scan Floating Widget */}
+      {returnToScanId && (
+        <div style={{
+          position: 'fixed',
+          bottom: '2rem',
+          right: '2rem',
+          zIndex: 100,
+          animation: 'slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        }}>
+          <button 
+            onClick={() => router.push(`/stock-opname/${returnToScanId}/scan`)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '1rem 1.5rem',
+              borderRadius: '9999px',
+              background: 'var(--accent-primary)',
+              color: 'white',
+              border: 'none',
+              boxShadow: '0 10px 25px rgba(59, 130, 246, 0.5)',
+              cursor: 'pointer',
+              fontWeight: 800,
+              fontSize: '1rem',
+              transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+            onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(59, 130, 246, 0.6)'; }}
+            onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(59, 130, 246, 0.5)'; }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Kembali ke Scanner
+          </button>
+        </div>
+      )}
     </div>
   );
 }

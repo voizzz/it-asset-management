@@ -39,14 +39,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   
   try {
     const { id } = await params;
-    const { password, role } = await request.json();
+    const { username, password, role } = await request.json();
     const db = await getDb();
     
+    // update logic with username
     if (password) {
       const hashed = hashPassword(password);
-      await db.run(`UPDATE User SET passwordHash = ?, role = ? WHERE id = ?`, [hashed, role, id]);
+      await db.run(`UPDATE User SET username = ?, passwordHash = ?, role = ? WHERE id = ?`, [username, hashed, role, id]);
     } else {
-      await db.run(`UPDATE User SET role = ? WHERE id = ?`, [role, id]);
+      await db.run(`UPDATE User SET username = ?, role = ? WHERE id = ?`, [username, role, id]);
     }
     
     return NextResponse.json({ success: true });

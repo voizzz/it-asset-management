@@ -90,94 +90,76 @@ export default async function Logs(props: { searchParams: Promise<{ q?: string, 
                   <ExportCsvButton logs={groupedLogs[monthYear]} monthYear={monthYear} empMap={empMap} />
                 </div>
                 
-                <div className={styles.timeline}>
-                  {groupedLogs[monthYear].map((log) => {
-                    const changes = parseChanges(log.changes);
-                    const isCreate = log.action === 'CREATED' || log.action === 'IMPORTED';
-                    const isDelete = log.action === 'DELETED';
-                    const targetName = log.currentHostname || changes.hostname || log.agentId;
-                    
-                    let actorName = '(Manual)';
-                    if (log.source === 'AGENT_AUTO') actorName = 'Automated System';
-                    else if (log.source.includes(':')) actorName = `(${log.source.split(':')[1]})`;
-                    else if (log.source === 'MANUAL_WEB' || log.source === 'EXCEL_WEB') actorName = `(Web UI)`;
-                    
-                    return (
-                      <div key={log.id} className={`${styles.logCard} ${styles[log.action.toLowerCase()]}`}>
-                        <div className={styles.arrowFill}></div>
-                        <div className={styles.logHeader}>
-                          <div className={styles.logMeta}>
-                            <span className={`${styles.badge} ${styles[log.action.toLowerCase()]}`}>{log.action}</span>
-                            <span className={styles.logTime}>Timestamp: {new Date(log.timestamp).toISOString().split('T')[1].replace('Z', '')}</span>
-                          </div>
-                          
-                          <div className={styles.sourceBadge}>
-                            <div className={styles.actorIcon}>
-                              {log.source === 'AGENT_AUTO' ? (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
-                              ) : (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                              )}
-                            </div>
-                            <div className={styles.actorInfo}>
-                              <span className={styles.actorTitle}>Actor</span>
-                              <span className={styles.actorName}>{actorName}</span>
-                            </div>
-                          </div>
-                        </div>
+                <div style={{ overflowX: 'auto', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                        <th style={{ padding: '1rem' }}>Timestamp</th>
+                        <th style={{ padding: '1rem' }}>Action</th>
+                        <th style={{ padding: '1rem' }}>Asset / Hostname</th>
+                        <th style={{ padding: '1rem' }}>Actor</th>
+                        <th style={{ padding: '1rem' }}>Changes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {groupedLogs[monthYear].map((log) => {
+                        const changes = parseChanges(log.changes);
+                        const isCreate = log.action === 'CREATED' || log.action === 'IMPORTED';
+                        const isDelete = log.action === 'DELETED';
+                        const targetName = log.currentHostname || changes.hostname || log.agentId;
                         
-                        <div className={styles.logBody}>
-                          {isCreate ? (
-                            <>
-                              <h4>Asset Created</h4>
-                              <div className={styles.targetId}>ID: {targetName}</div>
-                            </>
-                          ) : isDelete ? (
-                            <>
-                              <h4>Asset Deleted</h4>
-                              <div className={styles.targetId}>ID: {targetName}</div>
-                            </>
-                          ) : (
-                            <>
-                              <h4>Asset Updated</h4>
-                              <div className={styles.targetId}>ID: {targetName}</div>
-                              <div className={styles.changesTableWrapper}>
-                                <table className={styles.changesTable}>
-                                  <thead>
-                                    <tr>
-                                      <th>[Property]</th>
-                                      <th>[Before]</th>
-                                      <th>[After]</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {Object.entries(changes).map(([field, vals]: [string, any]) => {
-                                      if (field === 'assignment') {
-                                        return (
-                                          <tr key={field}>
-                                            <td className={styles.fieldName}>Assignment</td>
-                                            <td className={styles.oldValue}>-</td>
-                                            <td className={styles.newValue}>{vals.action === 'checkin' ? 'Checked In (Returned)' : `Checked Out to: ${empMap[vals.to] ? `${empMap[vals.to]} (${vals.to})` : vals.to}`}</td>
-                                          </tr>
-                                        );
-                                      }
+                        let actorName = 'Manual';
+                        if (log.source === 'AGENT_AUTO') actorName = 'System';
+                        else if (log.source.includes(':')) actorName = log.source.split(':')[1];
+                        else if (log.source === 'MANUAL_WEB' || log.source === 'EXCEL_WEB') actorName = 'Web UI';
+                        
+                        return (
+                          <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
+                            <td style={{ padding: '1rem', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>
+                              <span suppressHydrationWarning>{new Date(log.timestamp).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                            </td>
+                            <td style={{ padding: '1rem' }}>
+                              <span style={{ 
+                                padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700,
+                                background: log.action === 'CREATED' || log.action === 'IMPORTED' ? 'rgba(34,197,94,0.1)' : log.action === 'DELETED' ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)',
+                                color: log.action === 'CREATED' || log.action === 'IMPORTED' ? '#22c55e' : log.action === 'DELETED' ? '#ef4444' : '#3b82f6'
+                              }}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1rem', fontWeight: 600 }}>{targetName}</td>
+                            <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{actorName}</td>
+                            <td style={{ padding: '1rem' }}>
+                              {isCreate || isDelete ? (
+                                <span style={{ color: 'var(--text-muted)' }}>-</span>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                  {Object.entries(changes).map(([field, vals]: [string, any]) => {
+                                    if (field === 'assignment') {
                                       return (
-                                        <tr key={field}>
-                                          <td className={styles.fieldName}>{field.charAt(0).toUpperCase() + field.slice(1)}</td>
-                                          <td className={styles.oldValue}>{vals.from || '(Empty)'}</td>
-                                          <td className={styles.newValue}>{vals.to || '(Empty)'}</td>
-                                        </tr>
+                                        <div key={field} style={{ fontSize: '0.85rem' }}>
+                                          <strong style={{ color: 'var(--text-primary)' }}>Assignment:</strong>{' '}
+                                          <span style={{ color: 'var(--text-muted)' }}>{vals.action === 'checkin' ? 'Checked In' : `Checkout to ${empMap[vals.to] || vals.to}`}</span>
+                                        </div>
                                       );
-                                    })}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                                    }
+                                    return (
+                                      <div key={field} style={{ fontSize: '0.85rem' }}>
+                                        <strong style={{ color: 'var(--text-primary)' }}>{field.charAt(0).toUpperCase() + field.slice(1)}:</strong>{' '}
+                                        <span style={{ color: '#ef4444', textDecoration: 'line-through', marginRight: '0.35rem' }}>{vals.from || 'Empty'}</span>
+                                        <span>→</span>
+                                        <span style={{ color: '#22c55e', marginLeft: '0.35rem' }}>{vals.to || 'Empty'}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             ))
