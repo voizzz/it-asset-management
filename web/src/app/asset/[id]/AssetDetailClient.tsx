@@ -1,16 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './detail.module.css';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 
-<<<<<<< HEAD
-export default function AssetDetailClient({ agent }: { agent: any }) {
-=======
 export default function AssetDetailClient({ agent, software = [], assignments = [], employees = [] }: { agent: any, software?: any[], assignments?: any[], employees?: any[] }) {
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const router = useRouter();
+  const id = agent.id;
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [editData, setEditData] = useState({
@@ -28,8 +28,68 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
     realUser: agent.realUser || '',
     extension: agent.extension || '',
     purchaseDate: agent.purchaseDate || '',
-    warrantyMonths: agent.warrantyMonths || ''
+    warrantyMonths: agent.warrantyMonths || '',
+    employeeId: agent.employeeId || ''
   });
+
+  useEffect(() => {
+    fetchAttachments();
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.user) setCurrentUser(d.user);
+    }).catch(console.error);
+  }, [id]);
+
+  const fetchAttachments = async () => {
+    try {
+      const res = await fetch(`/api/attachments/entity/ASSET/${id}`);
+      const data = await res.json();
+      if (data.attachments) {
+        setAttachments(data.attachments);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('entityType', 'ASSET');
+    formData.append('entityId', id);
+
+    try {
+      const res = await fetch('/api/attachments/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAttachments([data.attachment, ...attachments]);
+      } else {
+        alert(data.error || 'Failed to upload');
+      }
+    } catch (err) {
+      alert('Error uploading file');
+    }
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!confirm('Are you sure you want to delete this attachment?')) return;
+    try {
+      const res = await fetch(`/api/attachments/${attachmentId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setAttachments(attachments.filter(a => a.id !== attachmentId));
+      }
+    } catch (err) {
+      alert('Failed to delete attachment');
+    }
+  };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this asset? This cannot be undone.')) return;
@@ -43,8 +103,6 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
     }
   };
 
-<<<<<<< HEAD
-=======
   const [checkoutEmployeeId, setCheckoutEmployeeId] = useState('');
   const [checkoutNotes, setCheckoutNotes] = useState('');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -80,7 +138,6 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
     }
   };
 
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const handleEditSave = async (e: any) => {
     e.preventDefault();
     try {
@@ -190,12 +247,9 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
           </div>
         )}
 
-<<<<<<< HEAD
-=======
       </div>
 
       <div className={styles.cardGrid} style={{ marginTop: '1.5rem' }}>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
         {/* Card 4: Additional Details */}
         <div className={styles.card}>
           <h3>
@@ -209,7 +263,7 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
 
           <div className={styles.sectionTitle} style={{ marginTop: '1.5rem' }}>Warranty & Lifecycle</div>
           <ul className={styles.list}>
-            <li><strong>Tanggal Pembelian:</strong> {agent.purchaseDate ? new Date(agent.purchaseDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Belum diisi'}</li>
+            <li suppressHydrationWarning><strong>Tanggal Pembelian:</strong> {agent.purchaseDate ? new Date(agent.purchaseDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Belum diisi'}</li>
             <li><strong>Durasi Garansi:</strong> {agent.warrantyMonths ? `${agent.warrantyMonths} bulan` : 'Belum diisi'}</li>
             {agent.purchaseDate && agent.warrantyMonths && (() => {
               const expiry = new Date(agent.purchaseDate);
@@ -232,8 +286,6 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
             })()}
           </ul>
         </div>
-<<<<<<< HEAD
-=======
 
 
         {/* Card 5: Assignment & Checkout */}
@@ -278,7 +330,7 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
             {assignments.map((a: any) => (
               <li key={a.id} style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
                 <div style={{ fontWeight: 600 }}>{a.employeeName}</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <div suppressHydrationWarning style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                   {new Date(a.assignedAt).toLocaleDateString()} - {a.returnedAt ? new Date(a.returnedAt).toLocaleDateString() : 'Present'}
                 </div>
               </li>
@@ -304,7 +356,56 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
             ))}
           </ul>
         </div>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
+      </div>
+
+      {/* Attachments Section */}
+      <div className={`${styles.card} ${styles.glassEffect}`} style={{ marginTop: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+            Dokumen & Lampiran
+          </h3>
+          <div>
+            <input type="file" ref={fileInputRef} onChange={handleFileUpload} style={{ display: 'none' }} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" />
+            <button onClick={() => fileInputRef.current?.click()} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Upload File
+            </button>
+          </div>
+        </div>
+        
+        {attachments.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
+            Belum ada dokumen yang dilampirkan.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+            {attachments.map(att => (
+              <div key={att.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+                    {att.mimeType?.includes('image') ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    ) : att.mimeType?.includes('pdf') ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                    )}
+                  </div>
+                  <div style={{ overflow: 'hidden' }}>
+                    <a href={att.fileUrl} target="_blank" rel="noreferrer" style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', textDecoration: 'none', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.fileName}</a>
+                    <p suppressHydrationWarning style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{(att.fileSize / 1024).toFixed(1)} KB • {new Date(att.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                {currentUser?.role === 'admin' && (
+                  <button onClick={() => handleDeleteAttachment(att.id)} style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', padding: '0.5rem' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Edit Modal */}
@@ -336,16 +437,15 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
                   {editData.category !== 'Network Device' && (
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>User (Real Name)</label>
-<<<<<<< HEAD
-                      <input type="text" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={editData.realUser} onChange={e => setEditData({...editData, realUser: e.target.value})} placeholder="e.g. Budi Santoso" />
-=======
-                      <select style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', appearance: 'auto', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={editData.realUser} onChange={e => setEditData({...editData, realUser: e.target.value})}>
+                      <select style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', appearance: 'auto', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={editData.employeeId} onChange={e => {
+                        const emp = employees.find(x => x.id === e.target.value);
+                        setEditData({...editData, employeeId: e.target.value, realUser: emp ? emp.name : ''});
+                      }}>
                         <option value="">Select Employee...</option>
                         {employees.map(emp => (
-                          <option key={emp.id} value={emp.name}>{emp.name}</option>
+                          <option key={emp.id} value={emp.id}>{emp.name}</option>
                         ))}
                       </select>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     </div>
                   )}
                   {editData.category !== 'Network Device' && editData.category !== 'IP Phone' && (

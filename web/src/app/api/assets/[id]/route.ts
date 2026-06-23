@@ -68,18 +68,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         realUser = ?,
         extension = ?,
         purchaseDate = ?,
-        warrantyMonths = ?
+        warrantyMonths = ?,
+        employeeId = ?
       WHERE id = ?
     `, [
       safeHostname, safeCategory, data.ipAddress, safeMac,
       safeBrand, safeModel, safeSerial, data.location, data.notes, data.status, data.currentUser, data.realUser, data.extension,
       data.purchaseDate || null, data.warrantyMonths ? parseInt(data.warrantyMonths) : null,
+      data.employeeId || null,
       resolvedParams.id
     ]);
 
     if (existing) {
       const changes: Record<string, any> = {};
-      const fieldsToCheck = ['hostname', 'category', 'ipAddress', 'macAddress', 'brand', 'model', 'serialNumber', 'location', 'notes', 'status', 'currentUser', 'realUser', 'extension', 'purchaseDate', 'warrantyMonths'];
+      const fieldsToCheck = ['hostname', 'category', 'ipAddress', 'macAddress', 'brand', 'model', 'serialNumber', 'location', 'notes', 'status', 'currentUser', 'realUser', 'extension', 'purchaseDate', 'warrantyMonths', 'employeeId'];
       
       for (const field of fieldsToCheck) {
         let newValue = data[field];

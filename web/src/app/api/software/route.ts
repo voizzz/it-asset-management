@@ -4,6 +4,18 @@ import { getDb } from '@/lib/db';
 export async function GET(request: Request) {
   try {
     const db = await getDb();
+    const url = new URL(request.url);
+    const softwareId = url.searchParams.get('softwareId');
+
+    if (softwareId) {
+      const devices = await db.all(`
+        SELECT a.id, a.hostname, a.ipAddress, a.os 
+        FROM Agent a
+        JOIN AgentSoftware asw ON a.id = asw.agentId
+        WHERE asw.softwareId = ?
+      `, [softwareId]);
+      return NextResponse.json({ devices });
+    }
     
     // Get software list with install counts
     const software = await db.all(`

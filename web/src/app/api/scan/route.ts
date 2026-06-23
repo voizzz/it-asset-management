@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     if (!subnet) return NextResponse.json({ error: 'Subnet required' }, { status: 400 });
 
     const baseIp = subnet.substring(0, subnet.lastIndexOf('.'));
-    const results = [];
+    const results: any[] = [];
     
     // Scan .1 to .254
     // Note: In a real app this should be batched to avoid hitting socket limits

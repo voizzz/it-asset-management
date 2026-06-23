@@ -9,11 +9,24 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: '--font-sans',
 });
 
-export const metadata: Metadata = {
-  title: "ITAM - Modern Asset Management",
-  description: "Lightweight and powerful IT Asset Management system",
-  themeColor: "#3b82f6",
-};
+import { getDb } from "@/lib/db";
+
+export async function generateMetadata(): Promise<Metadata> {
+  let appName = "ITAM";
+  try {
+    const db = await getDb();
+    const row = await db.get(`SELECT value FROM Settings WHERE key = 'logoName'`);
+    if (row && row.value) appName = row.value;
+  } catch (e) {
+    console.error("Failed to load metadata logoName", e);
+  }
+
+  return {
+    title: `${appName} - Modern Asset Management`,
+    description: "Lightweight and powerful IT Asset Management system",
+    themeColor: "#3b82f6",
+  };
+}
 
 export default function RootLayout({
   children,

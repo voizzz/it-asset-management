@@ -74,15 +74,9 @@ export async function POST(request: Request) {
             lastSeen=excluded.lastSeen,
             status=excluded.status,
             currentUser=excluded.currentUser,
-<<<<<<< HEAD
-            location=excluded.location
-          monHostname, monHostname, 'N/A', '', '', monSerial, (mon.brand || '').trim().toUpperCase(), (mon.model || '').trim().toUpperCase(), now, now, 'in-use', 'MONITOR', 0, data.currentUser || '', safeHostname
-        ]);
-=======
             location=excluded.location`,
           [monHostname, monHostname, 'N/A', '', '', monSerial, (mon.brand || '').trim().toUpperCase(), (mon.model || '').trim().toUpperCase(), now, now, 'in-use', 'MONITOR', 0, data.currentUser || '', safeHostname]
         );
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
         if (!existingMon) {
           await logAudit(monHostname, 'CREATED', 'AGENT_AUTO', { hostname: monHostname, category: 'MONITOR' });
@@ -99,8 +93,6 @@ export async function POST(request: Request) {
       }
     }
 
-<<<<<<< HEAD
-=======
     // Process installed software
     if (data.softwareList && Array.isArray(data.softwareList)) {
       // Clear old software mappings for this agent
@@ -135,7 +127,6 @@ export async function POST(request: Request) {
       }
     }
 
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
     // Auto Log Cleanup based on retention settings
     try {
       const retentionSetting = await db.get(`SELECT value FROM Settings WHERE key = 'logRetentionDays'`);

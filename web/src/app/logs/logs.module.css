@@ -26,6 +26,10 @@
   color: var(--text-primary);
   letter-spacing: -0.04em;
   text-transform: uppercase;
+  user-select: none;
+  text-align: center;
+  line-height: 1.1;
+  word-wrap: break-word;
 }
 
 .logo span {

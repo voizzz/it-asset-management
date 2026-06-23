@@ -7,6 +7,8 @@ export default function ConsumablesPage() {
   const [logoName, setLogoName] = useState('ITAM');
   const [consumables, setConsumables] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
   const [showAdd, setShowAdd] = useState(false);
   const [showAdjust, setShowAdjust] = useState<string | null>(null);
   const [showEdit, setShowEdit] = useState(false);
@@ -94,8 +96,12 @@ export default function ConsumablesPage() {
   const filteredConsumables = consumables.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase()))
+    (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+  
+  const totalPages = Math.ceil(filteredConsumables.length / ITEMS_PER_PAGE) || 1;
+  const paginatedConsumables = filteredConsumables.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className={styles.dashboard}>
@@ -112,7 +118,7 @@ export default function ConsumablesPage() {
                 type="text" 
                 placeholder="Search consumables..." 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', width: '250px', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
               />
               <svg style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -133,14 +139,15 @@ export default function ConsumablesPage() {
                   <th style={{ padding: '1rem' }}>Category</th>
                   <th style={{ padding: '1rem' }}>Location</th>
                   <th style={{ padding: '1rem' }}>Stock Level</th>
+                  <th style={{ padding: '1rem' }}>Notes</th>
                   <th style={{ padding: '1rem' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredConsumables.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No consumables found.</td></tr>
+                  <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No consumables found.</td></tr>
                 ) : (
-                  filteredConsumables.map(item => {
+                  paginatedConsumables.map(item => {
                     const isLow = item.quantity <= item.minQuantity;
                     return (
                       <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -156,6 +163,7 @@ export default function ConsumablesPage() {
                             {item.quantity} {isLow && ' (Low Stock)'}
                           </span>
                         </td>
+                        <td style={{ padding: '1rem', color: 'var(--text-secondary)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.notes}>{item.notes || '-'}</td>
                         <td style={{ padding: '1rem' }}>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button onClick={() => setShowAdjust(item.id)} style={{ padding: '0.4rem 0.8rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
@@ -171,6 +179,32 @@ export default function ConsumablesPage() {
                 )}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {consumables.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1rem 0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  Showing {Math.min(((currentPage - 1) * ITEMS_PER_PAGE) + 1, filteredConsumables.length)} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredConsumables.length)} of {filteredConsumables.length} entries
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                    disabled={currentPage === 1}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: currentPage === 1 ? 'transparent' : 'var(--bg-secondary)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                  >
+                    Previous
+                  </button>
+                  <span style={{ padding: '0.5rem', fontWeight: 600 }}>{currentPage} / {totalPages}</span>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                    disabled={currentPage >= totalPages}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: currentPage >= totalPages ? 'transparent' : 'var(--bg-secondary)', color: currentPage >= totalPages ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -178,38 +212,45 @@ export default function ConsumablesPage() {
       {/* Add Modal */}
       {showAdd && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-          <div style={{ width: '500px', background: '#fff', padding: '2rem', borderRadius: '16px' }}>
+          <div style={{ width: '500px', background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 700 }}>Add Consumable</h3>
             <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Item Name</label>
-                <input required type="text" value={newConsumable.name} onChange={e => setNewConsumable({...newConsumable, name: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <input required type="text" value={newConsumable.name} onChange={e => setNewConsumable({...newConsumable, name: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Category</label>
-                <select value={newConsumable.category} onChange={e => setNewConsumable({...newConsumable, category: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <option value="Toner">Toner / Ink</option>
-                  <option value="Cable">Cable / Adapter</option>
-                  <option value="Peripheral">Keyboard / Mouse</option>
-                  <option value="Other">Other</option>
-                </select>
+                <input 
+                  type="text" 
+                  list="consumable-categories" 
+                  required 
+                  value={newConsumable.category} 
+                  onChange={e => setNewConsumable({...newConsumable, category: e.target.value})} 
+                  placeholder="e.g. Toner, Battery, Cable..." 
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
+                />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Initial Quantity</label>
-                  <input type="number" min="0" value={newConsumable.quantity} onChange={e => setNewConsumable({...newConsumable, quantity: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                  <input type="number" min="0" value={newConsumable.quantity} onChange={e => setNewConsumable({...newConsumable, quantity: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Min Alert Qty</label>
-                  <input type="number" min="0" value={newConsumable.minQuantity} onChange={e => setNewConsumable({...newConsumable, minQuantity: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                  <input type="number" min="0" value={newConsumable.minQuantity} onChange={e => setNewConsumable({...newConsumable, minQuantity: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                 </div>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Storage Location</label>
-                <input type="text" value={newConsumable.location} onChange={e => setNewConsumable({...newConsumable, location: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <input type="text" value={newConsumable.location} onChange={e => setNewConsumable({...newConsumable, location: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Notes</label>
+                <textarea rows={3} value={newConsumable.notes} onChange={e => setNewConsumable({...newConsumable, notes: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', resize: 'vertical' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowAdd(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid #e2e8f0', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => setShowAdd(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'var(--accent-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>Save Item</button>
               </div>
             </form>
@@ -220,19 +261,27 @@ export default function ConsumablesPage() {
       {/* Adjust Modal */}
       {showAdjust && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-          <div style={{ width: '400px', background: '#fff', padding: '2rem', borderRadius: '16px' }}>
+          <div style={{ width: '400px', background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 700 }}>Adjust Stock</h3>
-            <form onSubmit={handleAdjust} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={(e) => {
+              const currentItem = consumables.find(c => c.id === showAdjust);
+              if (currentItem && currentItem.quantity + adjustData.quantityChange < 0) {
+                e.preventDefault();
+                alert(`Cannot subtract more than available stock (${currentItem.quantity})!`);
+                return;
+              }
+              handleAdjust(e);
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Quantity Change (+ / -)</label>
-                <input required type="number" value={adjustData.quantityChange} onChange={e => setAdjustData({...adjustData, quantityChange: parseInt(e.target.value)})} placeholder="e.g. -1 for checkout, +5 for restock" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <input required type="number" value={adjustData.quantityChange} onChange={e => setAdjustData({...adjustData, quantityChange: parseInt(e.target.value)})} placeholder="e.g. -1 for checkout, +5 for restock" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Reason</label>
-                <input required type="text" value={adjustData.reason} onChange={e => setAdjustData({...adjustData, reason: e.target.value})} placeholder="e.g. given to Budi" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <input required type="text" value={adjustData.reason} onChange={e => setAdjustData({...adjustData, reason: e.target.value})} placeholder="e.g. given to Budi" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowAdjust(null)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid #e2e8f0', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => setShowAdjust(null)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'var(--accent-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>Confirm</button>
               </div>
             </form>
@@ -243,38 +292,52 @@ export default function ConsumablesPage() {
       {/* Edit Modal */}
       {showEdit && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-          <div style={{ width: '500px', background: '#fff', padding: '2rem', borderRadius: '16px' }}>
+          <div style={{ width: '500px', background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 700 }}>Edit Consumable</h3>
             <form onSubmit={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Item Name</label>
-                <input required type="text" value={editItem.name} onChange={e => setEditItem({...editItem, name: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <input required type="text" value={editItem.name} onChange={e => setEditItem({...editItem, name: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Category</label>
-                <select value={editItem.category} onChange={e => setEditItem({...editItem, category: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <option value="Toner">Toner / Ink</option>
-                  <option value="Cable">Cable / Adapter</option>
-                  <option value="Peripheral">Keyboard / Mouse</option>
-                  <option value="Other">Other</option>
-                </select>
+                <input 
+                  type="text" 
+                  list="consumable-categories" 
+                  required 
+                  value={editItem.category} 
+                  onChange={e => setEditItem({...editItem, category: e.target.value})} 
+                  placeholder="e.g. Toner, Battery, Cable..." 
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
+                />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Min Alert Qty</label>
-                <input type="number" min="0" value={editItem.minQuantity} onChange={e => setEditItem({...editItem, minQuantity: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <input type="number" min="0" value={editItem.minQuantity} onChange={e => setEditItem({...editItem, minQuantity: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Storage Location</label>
-                <input type="text" value={editItem.location} onChange={e => setEditItem({...editItem, location: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <input type="text" value={editItem.location} onChange={e => setEditItem({...editItem, location: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Notes</label>
+                <textarea rows={3} value={editItem.notes} onChange={e => setEditItem({...editItem, notes: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', resize: 'vertical' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowEdit(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid #e2e8f0', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => setShowEdit(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'var(--accent-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>Save Changes</button>
               </div>
             </form>
           </div>
         </div>
       )}
+      {/* Dynamic Datalist for Categories */}
+      <datalist id="consumable-categories">
+        {Array.from(new Set(consumables.map(c => c.category))).filter(Boolean).map(cat => (
+          <option key={cat as string} value={cat as string} />
+        ))}
+      </datalist>
+
     </div>
   );
 }

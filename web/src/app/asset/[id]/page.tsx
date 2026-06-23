@@ -19,9 +19,6 @@ export default async function AssetDetail({ params }: { params: Promise<{ id: st
     isManual: !!agent.isManual
   };
 
-<<<<<<< HEAD
-  return <AssetDetailClient agent={parsedAgent} />;
-=======
   // Fetch software
   const software = await db.all(`
     SELECT s.name, s.version, s.publisher, asw.installDate
@@ -43,5 +40,4 @@ export default async function AssetDetail({ params }: { params: Promise<{ id: st
   const employees = await db.all(`SELECT * FROM Employee WHERE status = 'active' ORDER BY name ASC`);
 
   return <AssetDetailClient agent={parsedAgent} software={software} assignments={assignments} employees={employees} />;
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 }

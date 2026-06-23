@@ -8,12 +8,18 @@ export default function TicketsPage() {
   const [logoName, setLogoName] = useState('ITAM');
   const [tickets, setTickets] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
   const [showAdd, setShowAdd] = useState(false);
-  const [newTicket, setNewTicket] = useState({ title: '', description: '', priority: 'Medium', category: '' });
+  const [newTicket, setNewTicket] = useState({ title: '', description: '', priority: 'Medium', category: '', employeeId: '', agentId: '' });
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [assets, setAssets] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/settings/get').then(r => r.json()).then(d => { if (d.logoName) setLogoName(d.logoName); });
     fetchTickets();
+    fetch('/api/employees').then(r => r.json()).then(d => setEmployees(d.employees || []));
+    fetch('/api/assets/list').then(r => r.json()).then(d => setAssets(d.assets || []));
     
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -41,7 +47,7 @@ export default function TicketsPage() {
         body: JSON.stringify({ ...newTicket, status: 'Open' })
       });
       setShowAdd(false);
-      setNewTicket({ title: '', description: '', priority: 'Medium', category: '' });
+      setNewTicket({ title: '', description: '', priority: 'Medium', category: '', employeeId: '', agentId: '' });
       fetchTickets();
     } catch (e) {
       alert('Failed to add ticket');
@@ -83,7 +89,7 @@ export default function TicketsPage() {
                 type="text" 
                 placeholder="Search tickets..." 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', width: '250px', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
               />
               <svg style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -115,10 +121,15 @@ export default function TicketsPage() {
                     (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) ||
                     (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase()))
                   );
+                  
+                  const totalPages = Math.ceil(filteredTickets.length / ITEMS_PER_PAGE);
+                  const paginatedTickets = filteredTickets.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
                   return filteredTickets.length === 0 ? (
                     <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No tickets found.</td></tr>
                   ) : (
-                    filteredTickets.map(ticket => (
+                    <>
+                    {paginatedTickets.map(ticket => (
                       <tr key={ticket.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '1rem', fontWeight: 600 }}>{ticket.title}</td>
                         <td style={{ padding: '1rem' }}>
@@ -136,57 +147,131 @@ export default function TicketsPage() {
                           <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>{ticket.agentHostname || '-'}</div>
                         </td>
                         <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{ticket.category || '-'}</td>
-                        <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{new Date(ticket.createdAt).toLocaleDateString()}</td>
+                        <td suppressHydrationWarning style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{new Date(ticket.createdAt).toLocaleDateString()}</td>
                         <td style={{ padding: '1rem' }}>
                           <Link href={`/tickets/${ticket.id}`} style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', backgroundColor: 'var(--accent-primary)', color: 'white', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>
                             View
                           </Link>
                         </td>
                       </tr>
-                    ))
+                    ))}
+                    </>
                   );
                 })()}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {tickets.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1rem 0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  {(() => {
+                     const filtered = tickets.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase())));
+                     return `Showing ${Math.min(((currentPage - 1) * ITEMS_PER_PAGE) + 1, filtered.length)} to ${Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of ${filtered.length} entries`;
+                  })()}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                    disabled={currentPage === 1}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: currentPage === 1 ? 'transparent' : 'var(--bg-secondary)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                  >
+                    Previous
+                  </button>
+                  {(() => {
+                     const filtered = tickets.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase())));
+                     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+                     return <span style={{ padding: '0.5rem', fontWeight: 600 }}>{currentPage} / {totalPages}</span>;
+                  })()}
+                  <button 
+                    onClick={() => {
+                      const filtered = tickets.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase())));
+                      const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                      setCurrentPage(p => Math.min(totalPages, p + 1));
+                    }} 
+                    disabled={(() => {
+                      const filtered = tickets.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase())));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                    })()}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: (() => {
+                      const filtered = tickets.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase())));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE) ? 'transparent' : 'var(--bg-secondary)';
+                    })(), color: (() => {
+                      const filtered = tickets.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase())));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE) ? 'var(--text-muted)' : 'var(--text-primary)';
+                    })(), cursor: (() => {
+                      const filtered = tickets.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || (t.employeeName && t.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || (t.agentHostname && t.agentHostname.toLowerCase().includes(searchQuery.toLowerCase())));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE) ? 'not-allowed' : 'pointer';
+                    })(), fontWeight: 600 }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {showAdd && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-          <div style={{ width: '500px', background: '#fff', padding: '2rem', borderRadius: '16px' }}>
+          <div style={{ width: '500px', background: 'var(--bg-card)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
             <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 700 }}>Create Ticket</h3>
             <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Title</label>
-                <input required type="text" value={newTicket.title} onChange={e => setNewTicket({...newTicket, title: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0' }} placeholder="Short description of the issue" />
+                <input required type="text" value={newTicket.title} onChange={e => setNewTicket({...newTicket, title: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} placeholder="Short description of the issue" />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Category</label>
-                <select value={newTicket.category} onChange={e => setNewTicket({...newTicket, category: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}>
-                  <option value="">Select Category...</option>
-                  <option value="Hardware">Hardware</option>
-                  <option value="Software">Software</option>
-                  <option value="Network">Network</option>
-                  <option value="Access">Access & Accounts</option>
-                  <option value="Other">Other</option>
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Category</label>
+                  <select value={newTicket.category} onChange={e => setNewTicket({...newTicket, category: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                    <option value="">Select Category...</option>
+                    <option value="Hardware">Hardware</option>
+                    <option value="Software">Software</option>
+                    <option value="Network">Network</option>
+                    <option value="Access">Access & Accounts</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Priority</label>
+                  <select value={newTicket.priority} onChange={e => setNewTicket({...newTicket, priority: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Priority</label>
-                <select value={newTicket.priority} onChange={e => setNewTicket({...newTicket, priority: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}>
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Critical">Critical</option>
-                </select>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Related Employee (Opt)</label>
+                  <select value={newTicket.employeeId} onChange={e => setNewTicket({...newTicket, employeeId: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                    <option value="">None</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Related Asset (Opt)</label>
+                  <select value={newTicket.agentId} onChange={e => setNewTicket({...newTicket, agentId: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                    <option value="">None</option>
+                    {assets.map(a => (
+                      <option key={a.id} value={a.id}>{a.hostname}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Description</label>
-                <textarea required rows={4} value={newTicket.description} onChange={e => setNewTicket({...newTicket, description: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', resize: 'vertical' }} placeholder="Detailed description..."></textarea>
+                <textarea required rows={4} value={newTicket.description} onChange={e => setNewTicket({...newTicket, description: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', resize: 'vertical' }} placeholder="Detailed description..."></textarea>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowAdd(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid #e2e8f0', cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => setShowAdd(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'var(--accent-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>Create Ticket</button>
               </div>
             </form>

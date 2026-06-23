@@ -32,7 +32,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ data });
     } else if (type === 'tickets') {
       const data = await db.all(`
-        SELECT t.id, t.title, t.status, t.priority, t.createdAt, e.name as creatorName, a.hostname as assetName
+        SELECT t.id, t.title, t.status, t.priority, t.createdAt, t.updatedAt, e.name as creatorName, a.hostname as assetName,
+        (SELECT changedAt FROM TicketHistory WHERE ticketId = t.id AND newStatus = 'Closed' ORDER BY changedAt DESC LIMIT 1) as historyClosedAt,
+        (SELECT changedBy FROM TicketHistory WHERE ticketId = t.id AND newStatus = 'Closed' ORDER BY changedAt DESC LIMIT 1) as historyClosedBy
         FROM Ticket t
         LEFT JOIN Employee e ON t.employeeId = e.id
         LEFT JOIN Agent a ON t.agentId = a.id

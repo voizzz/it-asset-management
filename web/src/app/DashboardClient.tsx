@@ -42,9 +42,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-<<<<<<< HEAD
-export default function DashboardClient({ agents, logs, stats, serverStats }: { agents: any[], logs: any[], stats: any, serverStats: any }) {
-=======
 function TicketStatusBadge({ status }: { status: string }) {
   let bg = '#f3f4f6', color = '#4b5563', dot = '#6b7280';
   if (status === 'Open') { bg = '#fef2f2'; color = '#dc2626'; dot = '#dc2626'; }
@@ -66,7 +63,6 @@ function TicketStatusBadge({ status }: { status: string }) {
 }
 
 export default function DashboardClient({ agents, logs, stats, serverStats, recentTickets = [] }: { agents: any[], logs: any[], stats: any, serverStats: any, recentTickets?: any[] }) {
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
@@ -130,15 +126,76 @@ export default function DashboardClient({ agents, logs, stats, serverStats, rece
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           </div>
         </div>
-<<<<<<< HEAD
-=======
         
 
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       </section>
 
-      {/* Warranty expiry warning banner */}
-      <ExpiryWarningBanner agents={agents} />
+      {/* Alerts Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        {/* Left: Warranty expiry warning banner */}
+        <ExpiryWarningBanner agents={agents} />
+
+        {/* Right: License Expiry Warnings */}
+        {(stats.expiredLicenses > 0 || stats.expiringLicenses > 0) ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {stats.expiredLicenses > 0 && (
+              <div style={{ padding: '1.25rem 1.75rem', background: '#fee2e2', border: '1px solid rgba(239, 68, 68, 0.35)', borderRadius: '16px', color: '#b91c1c', display: 'flex', alignItems: 'flex-start', gap: '1rem', boxShadow: '0 2px 10px rgba(239, 68, 68, 0.1)', height: '100%' }}>
+                <div style={{ width: 42, height: 42, borderRadius: '12px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div style={{flex: 1}}>
+                  <strong style={{fontWeight: 700, display: 'block', fontSize: '1.05rem', marginBottom: '0.35rem', color: '#991b1b', letterSpacing: '-0.01em'}}>License Critical Alert</strong> 
+                  <p style={{ margin: 0, fontSize: '0.88rem', color: '#b91c1c' }}>You have {stats.expiredLicenses} expired software license(s).</p>
+                  <Link href="/software" style={{ display: 'inline-block', marginTop: '0.75rem', padding: '0.3rem 0.8rem', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#991b1b', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none' }}>Review Licenses</Link>
+                </div>
+              </div>
+            )}
+            {stats.expiringLicenses > 0 && (
+              <div style={{ padding: '1.25rem 1.75rem', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.18))', border: '1px solid rgba(245, 158, 11, 0.35)', borderRadius: '16px', color: '#b45309', display: 'flex', alignItems: 'flex-start', gap: '1rem', boxShadow: '0 2px 10px rgba(245, 158, 11, 0.1)', height: '100%' }}>
+                <div style={{ width: 42, height: 42, borderRadius: '12px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div style={{flex: 1}}>
+                  <strong style={{fontWeight: 700, display: 'block', fontSize: '1.05rem', marginBottom: '0.35rem', color: '#92400e', letterSpacing: '-0.01em'}}>License Warning</strong> 
+                  <p style={{ margin: 0, fontSize: '0.88rem', color: '#b45309' }}>You have {stats.expiringLicenses} license(s) expiring within 3 months.</p>
+                  <Link href="/software" style={{ display: 'inline-block', marginTop: '0.75rem', padding: '0.3rem 0.8rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.25)', color: '#92400e', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none' }}>Review Licenses</Link>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.15))',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            padding: '1.25rem 1.75rem',
+            borderRadius: '16px',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '1rem',
+          }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: '12px', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(16, 185, 129, 0.2)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.01em', color: '#065f46' }}>
+                Status Lisensi Software — Aman ✓
+              </h3>
+              <p style={{ margin: '0.35rem 0 0', fontSize: '0.88rem', color: '#047857' }}>
+                Semua lisensi software masih berlaku atau belum mendekati masa habis.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Asset Distribution Chart */}
       <div className={styles.chartCard}>
@@ -149,64 +206,20 @@ export default function DashboardClient({ agents, logs, stats, serverStats, rece
       {/* Main Grid Content */}
       <div className={styles.contentGrid}>
         
-<<<<<<< HEAD
-        {/* Left Column: Recent Assets */}
-        <div className={styles.recentAssetsCard}>
-          <h3 className={styles.cardHeading}>Aset Terbaru & Status</h3>
-=======
         {/* Left Column: Recent Tickets */}
         <div className={styles.recentAssetsCard}>
           <h3 className={styles.cardHeading}>Tiket Terbaru</h3>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
           <div className={styles.tableWrapper}>
             <table className={styles.modernTable}>
               <thead>
                 <tr>
-<<<<<<< HEAD
-                  <th>HOSTNAME</th>
-=======
                   <th>JUDUL TIKET</th>
                   <th>PRIORITAS</th>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                   <th>STATUS</th>
                   <th style={{textAlign: 'right'}}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
-<<<<<<< HEAD
-                {agents.slice(0, 5).map(agent => (
-                  <tr key={agent.id}>
-                    <td>
-                      <div style={{fontWeight: 700, color: '#1f2937', textTransform: 'uppercase', letterSpacing: '0.03em'}}>{agent.hostname}</div>
-                      {agent.serialNumber && <div style={{fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.03em'}}>{agent.serialNumber}</div>}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        <StatusBadge status={agent.status || 'offline'} />
-                        {(() => {
-                          const ws = getWarrantyStatus(agent);
-                          if (!ws) return null;
-                          return (
-                            <span style={{
-                              fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: '20px', fontWeight: 700,
-                              letterSpacing: '0.04em',
-                              background: ws === 'expired' ? 'rgba(220,38,38,0.12)' : 'rgba(245,158,11,0.12)',
-                              color: ws === 'expired' ? '#dc2626' : '#b45309',
-                              border: `1px solid ${ws === 'expired' ? 'rgba(220,38,38,0.3)' : 'rgba(245,158,11,0.3)'}`,
-                              whiteSpace: 'nowrap'
-                            }}>
-                              ⚠ {ws === 'expired' ? 'EXPIRED' : 'WARNING'}
-                            </span>
-                          );
-                        })()}
-                      </div>
-                    </td>
-                    <td style={{textAlign: 'right'}}>
-                      <Link href={`/asset/${agent.id}`} className={styles.detailsBtn}>Details</Link>
-                    </td>
-                  </tr>
-                ))}
-=======
                 {recentTickets.length === 0 ? (
                   <tr>
                     <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>Belum ada tiket.</td>
@@ -236,7 +249,6 @@ export default function DashboardClient({ agents, logs, stats, serverStats, rece
                     </tr>
                   ))
                 )}
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
               </tbody>
             </table>
           </div>
@@ -317,11 +329,7 @@ export default function DashboardClient({ agents, logs, stats, serverStats, rece
                       <span className={styles.logActionBadge} style={{ background: log.action === 'CREATED' ? '#d1fae5' : log.action === 'DELETED' ? '#fee2e2' : '#dbeafe', color: log.action === 'CREATED' ? '#059669' : log.action === 'DELETED' ? '#dc2626' : '#2563eb' }}>
                         {log.action === 'CREATED' ? 'DIBUAT' : log.action === 'UPDATED' ? 'DIUPDATE' : 'DIHAPUS'}
                       </span>
-<<<<<<< HEAD
-                      <span className={styles.logTime}>{new Date(log.timestamp).toLocaleString()}</span>
-=======
                       <span className={styles.logTime} suppressHydrationWarning>{new Date(log.timestamp).toLocaleString()}</span>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     </div>
                     <p className={styles.logDesc}>Aset <strong style={{textTransform:'uppercase'}}>{log.agentId}</strong> telah {log.action === 'CREATED' ? 'ditambahkan' : log.action === 'UPDATED' ? 'diperbarui' : 'dihapus'}.</p>
                     <div className={styles.logSource}>

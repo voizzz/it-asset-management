@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
-export default function ExportCsvButton({ logs, monthYear }: { logs: any[], monthYear: string }) {
+export default function ExportCsvButton({ logs, monthYear, empMap = {} }: { logs: any[], monthYear: string, empMap?: Record<string, string> }) {
   const [isExporting, setIsExporting] = useState(false);
 
   const downloadExcel = async () => {
@@ -44,7 +44,13 @@ export default function ExportCsvButton({ logs, monthYear }: { logs: any[], mont
           
           if (log.action === 'UPDATED' && changes) {
             changesText = Object.entries(changes)
-              .map(([k, v]: [string, any]) => `${k}: ${v?.from ?? 'empty'} -> ${v?.to ?? 'empty'}`)
+              .map(([k, v]: [string, any]) => {
+                if (k === 'assignment') {
+                  const empName = empMap[v.to] ? `${empMap[v.to]} (${v.to})` : v.to;
+                  return `Assignment: ${v.action === 'checkin' ? 'Returned' : `Checked out to ${empName}`}`;
+                }
+                return `${k}: ${v?.from ?? '(Empty)'} -> ${v?.to ?? '(Empty)'}`;
+              })
               .join('\n'); // newline for better readability in Excel
           }
         } catch (e) {}
@@ -53,7 +59,7 @@ export default function ExportCsvButton({ logs, monthYear }: { logs: any[], mont
           id: log.id,
           timestamp: timestamp,
           action: log.action,
-          source: log.source === 'AGENT_AUTO' ? 'Automated' : (log.source?.startsWith('MANUAL_WEB:') ? `Manual (${log.source.split(':')[1]})` : 'Manual'),
+          source: log.source === 'AGENT_AUTO' ? 'Automated' : (log.source?.includes(':') ? `Manual (${log.source.split(':')[1]})` : 'Manual'),
           target: targetName,
           changes: changesText
         });

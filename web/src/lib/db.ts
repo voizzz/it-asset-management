@@ -63,8 +63,6 @@ export function getDb(): Promise<Database> {
           value TEXT
         );
 
-<<<<<<< HEAD
-=======
         CREATE TABLE IF NOT EXISTS Software (
           id TEXT PRIMARY KEY,
           name TEXT,
@@ -141,10 +139,31 @@ export function getDb(): Promise<Database> {
           id TEXT PRIMARY KEY,
           ticketId TEXT,
           content TEXT,
+          authorName TEXT,
           createdAt DATETIME
         );
 
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
+        CREATE TABLE IF NOT EXISTS TicketHistory (
+          id TEXT PRIMARY KEY,
+          ticketId TEXT,
+          oldStatus TEXT,
+          newStatus TEXT,
+          changedBy TEXT,
+          changedAt DATETIME
+        );
+
+        CREATE TABLE IF NOT EXISTS Attachment (
+          id TEXT PRIMARY KEY,
+          entityType TEXT,
+          entityId TEXT,
+          fileName TEXT,
+          fileUrl TEXT,
+          fileSize INTEGER,
+          mimeType TEXT,
+          uploadedBy TEXT,
+          createdAt DATETIME
+        );
+
         INSERT INTO Settings (key, value) 
         SELECT 'logoName', 'ITAM'
         WHERE NOT EXISTS (SELECT 1 FROM Settings WHERE key = 'logoName');
@@ -170,14 +189,14 @@ export function getDb(): Promise<Database> {
 
       try { await db.run(`ALTER TABLE Agent ADD COLUMN category TEXT DEFAULT 'PC'`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN isManual BOOLEAN DEFAULT 0`); } catch (e) {}
-<<<<<<< HEAD
-=======
       try { await db.run(`ALTER TABLE Agent ADD COLUMN gpu TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN motherboard TEXT`); } catch (e) {}
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       try { await db.run(`ALTER TABLE Agent ADD COLUMN brand TEXT`); } catch (e) {}
-      try { await db.run(`ALTER TABLE Agent ADD COLUMN model TEXT`); } catch (e) {}
-      try { await db.run(`ALTER TABLE Agent ADD COLUMN location TEXT`); } catch (e) {}
+      try { await db.run(`ALTER TABLE Agent ADD COLUMN macAddress TEXT`); } catch (e) {}
+      
+      try { await db.run(`ALTER TABLE TicketComment ADD COLUMN authorName TEXT`); } catch (e) {}
+      
+      try { await db.run(`ALTER TABLE Ticket ADD COLUMN creatorName TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN notes TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN currentUser TEXT`); } catch (e) {}
       try { 
@@ -190,10 +209,7 @@ export function getDb(): Promise<Database> {
       try { await db.run(`ALTER TABLE Agent ADD COLUMN extension TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN purchaseDate TEXT`); } catch (e) {}
       try { await db.run(`ALTER TABLE Agent ADD COLUMN warrantyMonths INTEGER`); } catch (e) {}
-<<<<<<< HEAD
-=======
       try { await db.run(`ALTER TABLE Agent ADD COLUMN employeeId TEXT`); } catch (e) {}
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
       return db;
     })();
@@ -202,10 +218,22 @@ export function getDb(): Promise<Database> {
   return dbPromise;
 }
 
+export async function closeDb(): Promise<void> {
+  if (dbPromise) {
+    try {
+      const db = await dbPromise;
+      await db.close();
+    } catch (e) {
+      console.error("Failed to close DB:", e);
+    }
+    dbPromise = null;
+  }
+}
+
 export async function logAudit(
   agentId: string,
   action: 'CREATED' | 'UPDATED' | 'DELETED',
-  source: 'AGENT_AUTO' | 'MANUAL_WEB',
+  source: string,
   changes: Record<string, any>
 ) {
   const db = await getDb();

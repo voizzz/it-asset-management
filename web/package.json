@@ -10,10 +10,7 @@
   },
   "dependencies": {
     "@prisma/client": "^7.8.0",
-<<<<<<< HEAD
-=======
     "dotenv": "^17.4.2",
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "html5-qrcode": "^2.3.8",

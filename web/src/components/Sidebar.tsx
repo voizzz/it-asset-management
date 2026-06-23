@@ -11,6 +11,8 @@ export default function Sidebar({ logoName }: { logoName: string }) {
   const [activeHash, setActiveHash] = useState('profile');
   const [reportsOpen, setReportsOpen] = useState(pathname === '/reports');
   const [activeReportHash, setActiveReportHash] = useState('assets');
+  const safePathname = pathname || '';
+  const [formsOpen, setFormsOpen] = useState(safePathname.startsWith('/forms'));
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,8 +30,24 @@ export default function Sidebar({ logoName }: { logoName: string }) {
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.logo}>
-        {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
+      <div className={styles.logo} style={{ fontSize: logoName.length > 10 ? '1.5rem' : '2rem' }}>
+        {(() => {
+          const words = logoName.trim().split(' ');
+          if (words.length > 1) {
+            const lastWord = words.pop();
+            const rest = words.join(' ');
+            return (
+              <>
+                {rest} <span style={{ display: 'block' }}>{lastWord}</span>
+              </>
+            );
+          }
+          return (
+            <>
+              {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
+            </>
+          );
+        })()}
       </div>
       <nav className={styles.nav}>
         <Link href="/" className={`${styles.navItem} ${pathname === '/' ? styles.active : ''}`}>
@@ -56,10 +74,29 @@ export default function Sidebar({ logoName }: { logoName: string }) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
           Consumables
         </Link>
-        <Link href="/tickets" className={`${styles.navItem} ${pathname === '/tickets' || pathname.startsWith('/tickets/') ? styles.active : ''}`}>
+        <Link href="/tickets" className={`${styles.navItem} ${pathname === '/tickets' || safePathname.startsWith('/tickets/') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
           Tickets
         </Link>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div 
+            onClick={() => setFormsOpen(!formsOpen)} 
+            className={`${styles.navItem} ${safePathname.startsWith('/forms') ? styles.active : ''}`}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span style={{ marginLeft: '8px' }}>Formulir</span>
+            <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s ease', transform: formsOpen ? 'rotate(90deg)' : 'none' }}><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </span>
+          </div>
+          {formsOpen && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
+              <Link href="/forms/handover" className={`${styles.navItem} ${pathname === '/forms/handover' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Serah Terima Barang</Link>
+              <Link href="/forms/inspection" className={`${styles.navItem} ${pathname === '/forms/inspection' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Device Inspection</Link>
+            </div>
+          )}
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div 
             onClick={() => {
@@ -74,13 +111,15 @@ export default function Sidebar({ logoName }: { logoName: string }) {
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
             <span style={{ marginLeft: '8px' }}>Reports</span>
-            <span style={{ marginLeft: 'auto', fontSize: '0.8rem', opacity: 0.7 }}>{reportsOpen ? '▼' : '▶'}</span>
+            <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s ease', transform: reportsOpen ? 'rotate(90deg)' : 'none' }}><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </span>
           </div>
           {reportsOpen && (
-            <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: '2.5rem', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <a href="/reports#assets" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'assets' ? styles.active : ''}`} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Report Assets</a>
-              <a href="/reports#tickets" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'tickets' ? styles.active : ''}`} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Report Ticketing</a>
-              <a href="/reports#consumables" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'consumables' ? styles.active : ''}`} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Report Consumables</a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
+              <a href="/reports#assets" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'assets' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Assets</a>
+              <a href="/reports#tickets" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'tickets' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Ticketing</a>
+              <a href="/reports#consumables" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'consumables' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Consumables</a>
             </div>
           )}
         </div>
@@ -96,20 +135,22 @@ export default function Sidebar({ logoName }: { logoName: string }) {
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
             <span style={{ marginLeft: '8px' }}>Settings</span>
-            <span style={{ marginLeft: 'auto', fontSize: '0.8rem', opacity: 0.7 }}>{settingsOpen ? '▼' : '▶'}</span>
+            <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s ease', transform: settingsOpen ? 'rotate(90deg)' : 'none' }}><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </span>
           </div>
           {settingsOpen && (
-            <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: '2.5rem', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <a href="/settings#profile" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'profile' ? styles.active : ''}`} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>My Profile</a>
-              <a href="/settings#general" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'general' ? styles.active : ''}`} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>General Config</a>
-              <a href="/settings#agent" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'agent' ? styles.active : ''}`} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Agent Config</a>
-              <a href="/settings#account" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'account' ? styles.active : ''}`} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Accounts</a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
+              <a href="/settings#profile" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'profile' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Security</a>
+              <a href="/settings#general" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'general' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>General Config</a>
+              <a href="/settings#agent" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'agent' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Agent Config</a>
+              <a href="/settings#account" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'account' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Accounts</a>
             </div>
           )}
         </div>
       </nav>
       
-      <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+      <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingBottom: '1rem', position: 'relative', zIndex: 10 }}>
         <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
       </div>
     </aside>

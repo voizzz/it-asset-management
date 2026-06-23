@@ -1,11 +1,8 @@
-<<<<<<< HEAD
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
-=======
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,19 +12,7 @@ datasource db {
 }
 
 model Agent {
-<<<<<<< HEAD
-  id         String   @id @default(uuid())
-  hostname   String   @unique
-  os         String
-  ipAddress  String?
-  macAddress String?
-  cpu        String?
-  ramMb      Int?
-  diskGb     Int?
-  lastSeen   DateTime @default(now())
-  createdAt  DateTime @default(now())
-  status     String   @default("online")
-=======
+
   id             String   @id @default(uuid())
   hostname       String   @unique
   os             String
@@ -156,5 +141,4 @@ model TicketComment {
   ticketId  String
   content   String
   createdAt DateTime @default(now())
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 }

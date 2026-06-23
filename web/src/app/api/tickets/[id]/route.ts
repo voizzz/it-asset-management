@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { verifySession } from '@/lib/session';
+import { cookies } from 'next/headers';
 
 export async function GET(request: Request, context: any) {
   try {
@@ -53,10 +55,40 @@ export async function PUT(request: Request, context: any) {
     values.push(now);
     values.push(params.id);
     
+    // Check if status changed
+    let oldStatus = null;
+    let newStatus = null;
+    if (data.status !== undefined) {
+      const currentTicket = await db.get(`SELECT status FROM Ticket WHERE id = ?`, [params.id]);
+      if (currentTicket && currentTicket.status !== data.status) {
+        oldStatus = currentTicket.status;
+        newStatus = data.status;
+      }
+    }
+
     await db.run(
       `UPDATE Ticket SET ${fields.join(', ')} WHERE id = ?`,
       values
     );
+
+    // If status changed, record it in history
+    if (oldStatus && newStatus) {
+      const cookieStore = await cookies();
+      const sessionCookie = cookieStore.get('session');
+      let authorName = 'System User';
+      if (sessionCookie) {
+        const session = await verifySession(sessionCookie.value);
+        if (session && session.username) {
+          authorName = session.username;
+        }
+      }
+
+      await db.run(
+        `INSERT INTO TicketHistory (id, ticketId, oldStatus, newStatus, changedBy, changedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+        [crypto.randomUUID(), params.id, oldStatus, newStatus, authorName, now]
+      );
+    }
+    
     
     return NextResponse.json({ success: true });
   } catch (error: any) {

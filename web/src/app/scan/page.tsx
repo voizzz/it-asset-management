@@ -8,6 +8,7 @@ export default function NetworkScanPage() {
   const [subnet, setSubnet] = useState('192.168.1.0/24');
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+  const [registeredIps, setRegisteredIps] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch('/api/settings/get').then(r => r.json()).then(d => { if (d.logoName) setLogoName(d.logoName); });
@@ -33,6 +34,7 @@ export default function NetworkScanPage() {
   };
 
   const handleRegister = async (device: any) => {
+    if (registeredIps.has(device.ip)) return;
     try {
       const res = await fetch('/api/assets', {
         method: 'POST',
@@ -45,8 +47,11 @@ export default function NetworkScanPage() {
           isManual: true
         })
       });
-      if (res.ok) alert(`Registered ${device.ip} successfully`);
-      else alert('Failed to register');
+      if (res.ok) {
+        setRegisteredIps(prev => new Set(prev).add(device.ip));
+      } else {
+        alert('Failed to register');
+      }
     } catch (e) {
       alert('Failed to register device');
     }
@@ -91,15 +96,22 @@ export default function NetworkScanPage() {
                     <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '1rem', fontWeight: 600, fontFamily: 'monospace' }}>{d.ip}</td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{d.type}</td>
-                      <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
-                        {d.isWindows && <span style={{ background: '#dbeafe', color: '#1e40af', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>135 (RPC)</span>}
-                        {d.isSsh && <span style={{ background: '#f3e8ff', color: '#6b21a8', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>22 (SSH)</span>}
-                        {d.isWeb && <span style={{ background: '#dcfce7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>80 (HTTP)</span>}
+                      <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {d.isWindows && <span style={{ background: 'rgba(37,99,235,0.15)', color: '#3b82f6', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>135 (RPC)</span>}
+                        {d.isSsh && <span style={{ background: 'rgba(139,92,246,0.15)', color: '#8b5cf6', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>22 (SSH)</span>}
+                        {d.isWeb && <span style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>80 (HTTP)</span>}
                       </td>
                       <td style={{ padding: '1rem' }}>
-                        <button onClick={() => handleRegister(d)} style={{ padding: '0.4rem 0.8rem', background: 'transparent', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
-                          Add to Inventory
-                        </button>
+                        {registeredIps.has(d.ip) ? (
+                          <span style={{ padding: '0.4rem 0.8rem', color: 'var(--accent-success)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Added
+                          </span>
+                        ) : (
+                          <button onClick={() => handleRegister(d)} style={{ padding: '0.4rem 0.8rem', background: 'transparent', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
+                            Add to Inventory
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

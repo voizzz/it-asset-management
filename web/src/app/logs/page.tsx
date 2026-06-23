@@ -3,18 +3,21 @@ import styles from './logs.module.css';
 import ExportCsvButton from '@/components/ExportCsvButton';
 import LogoutButton from '@/components/LogoutButton';
 import LogoIcon from '@/components/LogoIcon';
-<<<<<<< HEAD
-=======
 import Sidebar from '@/components/Sidebar';
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
+import LogsSearch from './LogsSearch';
+import LogsPagination from './LogsPagination';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Logs() {
+export default async function Logs(props: { searchParams: Promise<{ q?: string, page?: string }> }) {
   const db = await getDb();
+  const searchParams = await props.searchParams;
+  const query = (searchParams?.q || '').toLowerCase();
+  const currentPage = parseInt(searchParams?.page || '1', 10);
+  const ITEMS_PER_PAGE = 15;
   
   // Fetch logs joined with agent hostname (if still exists)
-  const logs = await db.all(`
+  let logs = await db.all(`
     SELECT AuditLog.*, Agent.hostname as currentHostname
     FROM AuditLog 
     LEFT JOIN Agent ON AuditLog.agentId = Agent.id
@@ -24,10 +27,29 @@ export default async function Logs() {
   const settingsRow = await db.get(`SELECT value FROM Settings WHERE key = 'logoName'`);
   const logoName = settingsRow?.value || 'ITAM';
 
+  const employees = await db.all(`SELECT id, name FROM Employee`);
+  const empMap = employees.reduce((acc: any, emp: any) => {
+    acc[emp.id] = emp.name;
+    return acc;
+  }, {});
+
+  if (query) {
+    logs = logs.filter((log: any) => {
+      const targetName = (log.currentHostname || log.agentId || '').toLowerCase();
+      const action = (log.action || '').toLowerCase();
+      const source = (log.source || '').toLowerCase();
+      const changesStr = (log.changes || '').toLowerCase();
+      return targetName.includes(query) || action.includes(query) || source.includes(query) || changesStr.includes(query);
+    });
+  }
+
+  const totalPages = Math.ceil(logs.length / ITEMS_PER_PAGE) || 1;
+  const paginatedLogs = logs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   // Group by month
   const groupedLogs: Record<string, any[]> = {};
   
-  logs.forEach(log => {
+  paginatedLogs.forEach(log => {
     const date = new Date(log.timestamp);
     const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
     if (!groupedLogs[monthYear]) {
@@ -46,44 +68,15 @@ export default async function Logs() {
 
   return (
     <div className={styles.dashboard}>
-<<<<<<< HEAD
-        <aside className={styles.sidebar}>
-          <div className={styles.logo}>
-            {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
-          </div>
-          <nav className={styles.nav}>
-            <a href="/" className={styles.navItem}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-              Dashboard
-            </a>
-            <a href="/assets" className={styles.navItem}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
-              Assets
-            </a>
-            <a href="/logs" className={`${styles.navItem} ${styles.active}`}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              Logs
-            </a>
-            <a href="/settings" className={styles.navItem}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-              Settings
-            </a>
-          </nav>
-          
-          <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-            <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
-          </div>
-      </aside>
-=======
         <Sidebar logoName={logoName} />
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       
       <main className={styles.main}>
-        <header className={styles.header}>
+        <header className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2>Audit Logs</h2>
             <p className={styles.subtitle}>Track automated and manual asset changes over time.</p>
           </div>
+          <LogsSearch />
         </header>
 
         <section className={styles.logsContainer}>
@@ -94,15 +87,20 @@ export default async function Logs() {
               <div key={monthYear} className={styles.monthGroup}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h3 className={styles.monthTitle} style={{ margin: 0 }}>{monthYear}</h3>
-                  <ExportCsvButton logs={groupedLogs[monthYear]} monthYear={monthYear} />
+                  <ExportCsvButton logs={groupedLogs[monthYear]} monthYear={monthYear} empMap={empMap} />
                 </div>
                 
                 <div className={styles.timeline}>
                   {groupedLogs[monthYear].map((log) => {
                     const changes = parseChanges(log.changes);
-                    const isCreate = log.action === 'CREATED';
+                    const isCreate = log.action === 'CREATED' || log.action === 'IMPORTED';
                     const isDelete = log.action === 'DELETED';
                     const targetName = log.currentHostname || changes.hostname || log.agentId;
+                    
+                    let actorName = '(Manual)';
+                    if (log.source === 'AGENT_AUTO') actorName = 'Automated System';
+                    else if (log.source.includes(':')) actorName = `(${log.source.split(':')[1]})`;
+                    else if (log.source === 'MANUAL_WEB' || log.source === 'EXCEL_WEB') actorName = `(Web UI)`;
                     
                     return (
                       <div key={log.id} className={`${styles.logCard} ${styles[log.action.toLowerCase()]}`}>
@@ -123,9 +121,7 @@ export default async function Logs() {
                             </div>
                             <div className={styles.actorInfo}>
                               <span className={styles.actorTitle}>Actor</span>
-                              <span className={styles.actorName}>
-                                {log.source === 'AGENT_AUTO' ? 'automated system' : (log.source.startsWith('MANUAL_WEB:') ? `(${log.source.split(':')[1]})` : '(Manual)')}
-                              </span>
+                              <span className={styles.actorName}>{actorName}</span>
                             </div>
                           </div>
                         </div>
@@ -155,13 +151,24 @@ export default async function Logs() {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {Object.entries(changes).map(([field, vals]: [string, any]) => (
-                                      <tr key={field}>
-                                        <td className={styles.fieldName}>{field.charAt(0).toUpperCase() + field.slice(1)}</td>
-                                        <td className={styles.oldValue}>{vals.from || '(Empty)'}</td>
-                                        <td className={styles.newValue}>{vals.to || '(Empty)'}</td>
-                                      </tr>
-                                    ))}
+                                    {Object.entries(changes).map(([field, vals]: [string, any]) => {
+                                      if (field === 'assignment') {
+                                        return (
+                                          <tr key={field}>
+                                            <td className={styles.fieldName}>Assignment</td>
+                                            <td className={styles.oldValue}>-</td>
+                                            <td className={styles.newValue}>{vals.action === 'checkin' ? 'Checked In (Returned)' : `Checked Out to: ${empMap[vals.to] ? `${empMap[vals.to]} (${vals.to})` : vals.to}`}</td>
+                                          </tr>
+                                        );
+                                      }
+                                      return (
+                                        <tr key={field}>
+                                          <td className={styles.fieldName}>{field.charAt(0).toUpperCase() + field.slice(1)}</td>
+                                          <td className={styles.oldValue}>{vals.from || '(Empty)'}</td>
+                                          <td className={styles.newValue}>{vals.to || '(Empty)'}</td>
+                                        </tr>
+                                      );
+                                    })}
                                   </tbody>
                                 </table>
                               </div>
@@ -174,6 +181,9 @@ export default async function Logs() {
                 </div>
               </div>
             ))
+          )}
+          {Object.keys(groupedLogs).length > 0 && (
+            <LogsPagination totalPages={totalPages} currentPage={currentPage} />
           )}
         </section>
       </main>

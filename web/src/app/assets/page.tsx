@@ -6,10 +6,7 @@ import styles from '../page.module.css';
 import { QRCodeSVG } from 'qrcode.react';
 import LogoutButton from '@/components/LogoutButton';
 import LogoIcon from '@/components/LogoIcon';
-<<<<<<< HEAD
-=======
 import Sidebar from '@/components/Sidebar';
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
 const CATEGORIES = ['All', 'Laptop', 'PC', 'Monitor', 'Network Device', 'IP Phone', 'Server', 'Other'];
 
@@ -54,11 +51,10 @@ export default function AssetsPage() {
   const [activeTab, setActiveTab] = useState('All');
   const [agents, setAgents] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-<<<<<<< HEAD
-=======
   const [employees, setEmployees] = useState<any[]>([]);
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
   const [showScanner, setShowScanner] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isImporting, setIsImporting] = useState(false);
@@ -76,10 +72,11 @@ export default function AssetsPage() {
     serialNumber: '',
     location: '',
     notes: '',
-    status: 'in-use',
+    status: 'spare',
     os: 'N/A',
     currentUser: '',
     realUser: '',
+    employeeId: '',
     extension: '',
     purchaseDate: '',
     warrantyMonths: ''
@@ -89,13 +86,6 @@ export default function AssetsPage() {
     // Fetch settings
     fetch('/api/settings/get').then(r => r.json()).then(d => { if (d.logoName) setLogoName(d.logoName); });
     
-<<<<<<< HEAD
-    // Fetch assets. For simplicity, we can reuse the agent report logic or create a GET /api/assets
-    // Wait, we don't have GET /api/assets yet. Let's fetch from a new endpoint.
-    fetchAssets();
-  }, []);
-
-=======
     // Check url params for quick actions from dashboard
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -127,7 +117,6 @@ export default function AssetsPage() {
     }
   };
 
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
   const fetchAssets = async () => {
     try {
       const res = await fetch('/api/assets/list?t=' + Date.now());
@@ -195,14 +184,11 @@ export default function AssetsPage() {
       });
       if (!response.ok) throw new Error('API Error');
       setShowAddModal(false);
-<<<<<<< HEAD
-=======
       setNewAsset({
         hostname: '', category: 'Monitor', ipAddress: '', macAddress: '', brand: '',
-        model: '', serialNumber: '', location: '', notes: '', status: 'in-use', os: 'N/A',
-        currentUser: '', realUser: '', extension: '', purchaseDate: '', warrantyMonths: ''
+        model: '', serialNumber: '', location: '', notes: '', status: 'spare', os: 'N/A',
+        currentUser: '', realUser: '', employeeId: '', extension: '', purchaseDate: '', warrantyMonths: ''
       });
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
       fetchAssets();
     } catch (error) {
       alert('Failed to add asset');
@@ -245,49 +231,22 @@ export default function AssetsPage() {
     
     const q = searchQuery.toLowerCase();
     return (
+      (a.id && a.id.toLowerCase().includes(q)) ||
       (a.hostname && a.hostname.toLowerCase().includes(q)) ||
       (a.serialNumber && a.serialNumber.toLowerCase().includes(q)) ||
       (a.ipAddress && a.ipAddress.toLowerCase().includes(q)) ||
       (a.macAddress && a.macAddress.toLowerCase().includes(q)) ||
       (a.brand && a.brand.toLowerCase().includes(q)) ||
-      (a.model && a.model.toLowerCase().includes(q))
+      (a.model && a.model.toLowerCase().includes(q)) ||
+      (a.realUser && a.realUser.toLowerCase().includes(q)) ||
+      (a.currentUser && a.currentUser.toLowerCase().includes(q))
     );
   });
 
   try {
     return (
       <div className={styles.dashboard}>
-<<<<<<< HEAD
-      <aside className={styles.sidebar}>
-          <div className={styles.logo}>
-            {logoName.substring(0, logoName.length - 2)}<span>{logoName.substring(logoName.length - 2)}</span>
-          </div>
-        <nav className={styles.nav}>
-          <a href="/" className={styles.navItem}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            Dashboard
-          </a>
-          <a href="/assets" className={`${styles.navItem} ${styles.active}`}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
-            Assets
-          </a>
-          <a href="/logs" className={styles.navItem}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Logs
-          </a>
-          <a href="/settings" className={styles.navItem}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-            Settings
-          </a>
-        </nav>
-        
-        <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-          <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
-        </div>
-      </aside>
-=======
       <Sidebar logoName={logoName} />
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
 
       <section className={styles.main}>
         {errorMsg && (
@@ -309,7 +268,8 @@ export default function AssetsPage() {
             {CATEGORIES.map(cat => (
               <button
                 key={cat}
-                onClick={() => setActiveTab(cat)}
+                className={`${styles.tabBtn} ${activeTab === cat ? styles.active : ''}`}
+                onClick={() => {setActiveTab(cat); setCurrentPage(1);}}
                 style={{
                   padding: '0.5rem 1.25rem',
                   borderRadius: '8px',
@@ -404,11 +364,7 @@ export default function AssetsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-<<<<<<< HEAD
-                  {['HOSTNAME', 'CATEGORY', 'SERIAL NUMBER', 'TYPE', 'STATUS', 'ACTION'].map(col => (
-=======
                   {['HOSTNAME', 'CATEGORY', 'SERIAL NUMBER', 'USER', 'TYPE', 'STATUS', 'ACTION'].map(col => (
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     <th key={col} style={{ padding: '1rem', fontWeight: 700 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {col}
@@ -427,10 +383,7 @@ export default function AssetsPage() {
                       <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{agent.hostname}</td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }}>{agent.category || 'PC'}</td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }} title={agent.serialNumber || 'No serial'}>{agent.serialNumber || '-'}</td>
-<<<<<<< HEAD
-=======
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }}>{agent.realUser || '-'}</td>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }}>{agent.isManual ? 'Manual' : 'Agent'}</td>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -467,6 +420,55 @@ export default function AssetsPage() {
                 )}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {agents.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1rem 0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  {(() => {
+                     const filtered = agents.filter(a => (activeTab === 'All' || a.category === activeTab) && (a.hostname.toLowerCase().includes(searchQuery.toLowerCase()) || (a.brand && a.brand.toLowerCase().includes(searchQuery.toLowerCase()))));
+                     return `Showing ${Math.min(((currentPage - 1) * ITEMS_PER_PAGE) + 1, filtered.length)} to ${Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of ${filtered.length} entries`;
+                  })()}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                    disabled={currentPage === 1}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: currentPage === 1 ? 'transparent' : 'var(--bg-secondary)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                  >
+                    Previous
+                  </button>
+                  {(() => {
+                     const filtered = agents.filter(a => (activeTab === 'All' || a.category === activeTab) && (a.hostname.toLowerCase().includes(searchQuery.toLowerCase()) || (a.brand && a.brand.toLowerCase().includes(searchQuery.toLowerCase()))));
+                     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+                     return <span style={{ padding: '0.5rem', fontWeight: 600 }}>{currentPage} / {totalPages}</span>;
+                  })()}
+                  <button 
+                    onClick={() => {
+                      const filtered = agents.filter(a => (activeTab === 'All' || a.category === activeTab) && (a.hostname.toLowerCase().includes(searchQuery.toLowerCase()) || (a.brand && a.brand.toLowerCase().includes(searchQuery.toLowerCase()))));
+                      const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                      setCurrentPage(p => Math.min(totalPages, p + 1));
+                    }} 
+                    disabled={(() => {
+                      const filtered = agents.filter(a => (activeTab === 'All' || a.category === activeTab) && (a.hostname.toLowerCase().includes(searchQuery.toLowerCase()) || (a.brand && a.brand.toLowerCase().includes(searchQuery.toLowerCase()))));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                    })()}
+                    style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: (() => {
+                      const filtered = agents.filter(a => (activeTab === 'All' || a.category === activeTab) && (a.hostname.toLowerCase().includes(searchQuery.toLowerCase()) || (a.brand && a.brand.toLowerCase().includes(searchQuery.toLowerCase()))));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE) ? 'transparent' : 'var(--bg-secondary)';
+                    })(), color: (() => {
+                      const filtered = agents.filter(a => (activeTab === 'All' || a.category === activeTab) && (a.hostname.toLowerCase().includes(searchQuery.toLowerCase()) || (a.brand && a.brand.toLowerCase().includes(searchQuery.toLowerCase()))));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE) ? 'var(--text-muted)' : 'var(--text-primary)';
+                    })(), cursor: (() => {
+                      const filtered = agents.filter(a => (activeTab === 'All' || a.category === activeTab) && (a.hostname.toLowerCase().includes(searchQuery.toLowerCase()) || (a.brand && a.brand.toLowerCase().includes(searchQuery.toLowerCase()))));
+                      return currentPage >= Math.ceil(filtered.length / ITEMS_PER_PAGE) ? 'not-allowed' : 'pointer';
+                    })(), fontWeight: 600 }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -523,21 +525,20 @@ export default function AssetsPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>Asset Name / Hostname</label>
-                    <input required type="text" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={newAsset.hostname} onChange={e => setNewAsset({...newAsset, hostname: e.target.value})} placeholder="e.g. DESKTOP-PC-A1" />
+                    <input type="text" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={newAsset.hostname} onChange={e => setNewAsset({...newAsset, hostname: e.target.value})} placeholder="e.g. DESKTOP-PC-A1 (Optional)" />
                   </div>
                   {newAsset.category !== 'Network Device' && (
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>User (Real Name)</label>
-<<<<<<< HEAD
-                      <input type="text" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={newAsset.realUser} onChange={e => setNewAsset({...newAsset, realUser: e.target.value})} placeholder="e.g. Budi Santoso" />
-=======
-                      <select style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', appearance: 'auto', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={newAsset.realUser} onChange={e => setNewAsset({...newAsset, realUser: e.target.value})}>
+                      <select style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', appearance: 'auto', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-primary)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={newAsset.employeeId} onChange={e => {
+                        const emp = employees.find(x => x.id === e.target.value);
+                        setNewAsset({...newAsset, employeeId: e.target.value, realUser: emp ? emp.name : ''});
+                      }}>
                         <option value="">Select Employee...</option>
                         {employees.map(emp => (
-                          <option key={emp.id} value={emp.name}>{emp.name}</option>
+                          <option key={emp.id} value={emp.id}>{emp.name}</option>
                         ))}
                       </select>
->>>>>>> 5e60c2a (Initialize project and add standardized UX/UI features)
                     </div>
                   )}
                   {newAsset.category !== 'Network Device' && newAsset.category !== 'IP Phone' && (
