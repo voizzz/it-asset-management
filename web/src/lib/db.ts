@@ -110,7 +110,8 @@ export function getDb(): Promise<Database> {
           quantity INTEGER,
           minQuantity INTEGER,
           location TEXT,
-          notes TEXT
+          notes TEXT,
+          unit TEXT DEFAULT 'pcs'
         );
 
         CREATE TABLE IF NOT EXISTS ConsumableTransaction (

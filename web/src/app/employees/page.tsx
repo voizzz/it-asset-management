@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from '../page.module.css';
 import Sidebar from '@/components/Sidebar';
+import { toast } from '@/components/Toast';
+import { exportToExcel } from '@/lib/export';
 
 export default function EmployeesPage() {
   const [logoName, setLogoName] = useState('ITAM');
@@ -30,6 +32,20 @@ export default function EmployeesPage() {
     }
   };
 
+  const handleExport = async () => {
+    const columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Name', key: 'name', width: 30 },
+      { header: 'Department', key: 'department', width: 25 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Active Assets', key: 'assetCount', width: 15 },
+      { header: 'Total Value', key: 'totalValue', width: 20 },
+      { header: 'Tickets', key: 'ticketCount', width: 15 }
+    ];
+    await exportToExcel('Employees_Directory', 'Employees', columns, filteredEmployees);
+    toast.success('Employees exported successfully');
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -41,8 +57,9 @@ export default function EmployeesPage() {
       setShowAdd(false);
       setNewEmployee({ name: '', department: '', email: '' });
       fetchEmployees();
+      toast.success('Employee added successfully');
     } catch (e) {
-      alert('Failed to add employee');
+      toast.error('Failed to add employee');
     }
   };
 
@@ -56,20 +73,20 @@ export default function EmployeesPage() {
       });
       setShowEdit(false);
       fetchEmployees();
+      toast.success('Employee updated successfully');
     } catch (e) {
-      alert('Failed to edit employee');
+      toast.error('Failed to edit employee');
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this employee?')) return;
     try {
-      const res = await fetch(`/api/employees/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete');
+      await fetch(`/api/employees/${id}`, { method: 'DELETE' });
       fetchEmployees();
-    } catch (e: any) {
-      alert(e.message);
+      toast.success('Employee deleted successfully');
+    } catch (e) {
+      toast.error('Failed to delete employee');
     }
   };
 
@@ -102,6 +119,10 @@ export default function EmployeesPage() {
               />
               <svg style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
+            <button onClick={handleExport} style={{ padding: '0.6rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              Export
+            </button>
             <button onClick={() => setShowAdd(true)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: 'var(--accent-primary)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Employee

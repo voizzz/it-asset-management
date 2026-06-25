@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       });
     } else if (type === 'assets') {
       const data = await db.all(`
-        SELECT a.hostname, a.category, a.status, a.ipAddress, e.name as assignedTo
+        SELECT a.hostname, a.category, a.status, a.ipAddress, a.createdAt, a.purchaseDate, a.warrantyMonths, e.name as assignedTo
         FROM Agent a
         LEFT JOIN Employee e ON a.employeeId = e.id
         ORDER BY a.hostname ASC
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ data });
     } else if (type === 'tickets') {
       const data = await db.all(`
-        SELECT t.id, t.title, t.status, t.priority, t.createdAt, t.updatedAt, e.name as creatorName, a.hostname as assetName,
+        SELECT t.id, t.title, t.status, t.priority, t.category, t.createdAt, t.updatedAt, e.name as creatorName, a.hostname as assetName, a.category as assetCategory,
         (SELECT changedAt FROM TicketHistory WHERE ticketId = t.id AND newStatus = 'Closed' ORDER BY changedAt DESC LIMIT 1) as historyClosedAt,
         (SELECT changedBy FROM TicketHistory WHERE ticketId = t.id AND newStatus = 'Closed' ORDER BY changedAt DESC LIMIT 1) as historyClosedBy
         FROM Ticket t
@@ -46,6 +46,29 @@ export async function GET(request: Request) {
         SELECT name, category, quantity, minQuantity, location
         FROM Consumable
         ORDER BY category ASC, name ASC
+      `);
+      return NextResponse.json({ data });
+    } else if (type === 'software') {
+      const data = await db.all(`
+        SELECT s.id, s.name, s.version, s.publisher, COUNT(asw.agentId) as installCount,
+               GROUP_CONCAT(a.hostname || ' (' || COALESCE(e.name, a.currentUser, 'No User') || ')', ', ') as installedAssets
+        FROM Software s
+        LEFT JOIN AgentSoftware asw ON s.id = asw.softwareId
+        LEFT JOIN Agent a ON asw.agentId = a.id
+        LEFT JOIN Employee e ON a.employeeId = e.id
+        GROUP BY s.id
+        ORDER BY installCount DESC
+      `);
+      return NextResponse.json({ data });
+    } else if (type === 'licenses') {
+      const data = await db.all(`
+        SELECT l.*,
+        (SELECT COUNT(asw.agentId) 
+         FROM AgentSoftware asw 
+         JOIN Software s ON asw.softwareId = s.id 
+         WHERE s.name = l.softwareName) as usedSeats
+        FROM License l
+        ORDER BY l.expiryDate ASC
       `);
       return NextResponse.json({ data });
     }

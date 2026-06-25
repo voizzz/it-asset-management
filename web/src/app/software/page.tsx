@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import styles from '../page.module.css';
 import Sidebar from '@/components/Sidebar';
+import { toast } from '@/components/Toast';
+import { exportToExcel } from '@/lib/export';
 
 export default function SoftwarePage() {
   const [logoName, setLogoName] = useState('ITAM');
@@ -62,6 +64,29 @@ export default function SoftwarePage() {
     setIsLoadingDevices(false);
   };
 
+  const handleExport = async () => {
+    if (activeTab === 'inventory') {
+      const columns = [
+        { header: 'Software Name', key: 'name', width: 40 },
+        { header: 'Publisher', key: 'publisher', width: 30 },
+        { header: 'Installations', key: 'count', width: 15 }
+      ];
+      await exportToExcel('Software_Inventory', 'Software', columns, filteredSoftware);
+      toast.success('Software inventory exported successfully');
+    } else {
+      const columns = [
+        { header: 'Software Name', key: 'softwareName', width: 30 },
+        { header: 'License Key', key: 'licenseKey', width: 40 },
+        { header: 'Seats (Total)', key: 'totalSeats', width: 15 },
+        { header: 'Seats (Used)', key: 'usedSeats', width: 15 },
+        { header: 'Expiry Date', key: 'expiryDate', width: 20 },
+        { header: 'Notes', key: 'notes', width: 40 }
+      ];
+      await exportToExcel('Licenses', 'Licenses', columns, filteredLicenses);
+      toast.success('Licenses exported successfully');
+    }
+  };
+
   const handleAddLicense = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -73,8 +98,9 @@ export default function SoftwarePage() {
       setShowAddLicense(false);
       setNewLicense({ softwareName: '', licenseKey: '', totalSeats: 1, expiryDate: '', notes: '' });
       fetchData();
+      toast.success('License added successfully');
     } catch (e) {
-      alert('Failed to add license');
+      toast.error('Failed to add license');
     }
   };
 
@@ -88,8 +114,9 @@ export default function SoftwarePage() {
       });
       setShowEditLicense(false);
       fetchData();
+      toast.success('License updated successfully');
     } catch (e) {
-      alert('Failed to edit license');
+      toast.error('Failed to edit license');
     }
   };
 
@@ -102,8 +129,9 @@ export default function SoftwarePage() {
         body: JSON.stringify({ action: 'delete_license', id })
       });
       fetchData();
+      toast.success('License deleted successfully');
     } catch (e) {
-      alert('Failed to delete license');
+      toast.error('Failed to delete license');
     }
   };
 
@@ -142,15 +170,23 @@ export default function SoftwarePage() {
             <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-heading)', marginBottom: '0.5rem' }}>Software &amp; Licenses</h2>
             <p className={styles.subtitle}>Manage installed software and tracking license keys.</p>
           </div>
-          <div style={{ position: 'relative' }}>
-            <input 
-              type="text" 
-              placeholder="Search software/licenses..." 
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', width: '250px', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-            />
-            <svg style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <div style={{ position: 'relative', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <button 
+              onClick={handleExport}
+              style={{ padding: '0.6rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              Export
+            </button>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type="text" 
+                placeholder="Search software/licenses..." 
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', width: '250px', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+              />
+              <svg style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
           </div>
         </div>
 

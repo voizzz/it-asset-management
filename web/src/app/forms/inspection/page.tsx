@@ -5,6 +5,10 @@ import Sidebar from '@/components/Sidebar';
 
 export default function InspectionFormPage() {
   const [logoName, setLogoName] = useState('ITAM');
+  const [assets, setAssets] = useState<any[]>([]);
+  const [serialNumber, setSerialNumber] = useState('');
+  const [inspector, setInspector] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [items, setItems] = useState([
     'Kondisi Fisik / Casing',
     'Layar / Monitor',
@@ -20,7 +24,19 @@ export default function InspectionFormPage() {
 
   useEffect(() => {
     fetch('/api/settings/get').then(r => r.json()).then(d => { if (d.logoName) setLogoName(d.logoName); });
+    fetch('/api/assets/list').then(r => r.json()).then(d => setAssets(d.assets || []));
+    fetch('/api/auth/me').then(r => r.json()).then(d => { 
+      if (d.user) setInspector(d.user.username || '');
+    });
   }, []);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      const newImages = files.map(file => URL.createObjectURL(file));
+      setImages(prev => [...prev, ...newImages]);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -44,6 +60,9 @@ export default function InspectionFormPage() {
             padding: 0 !important;
             margin: 0 !important;
           }
+          table th:nth-last-child(2), table td:nth-last-child(2) {
+            border-right: 1px solid #000 !important;
+          }
         }
       `}} />
       <Sidebar logoName={logoName} />
@@ -66,7 +85,6 @@ export default function InspectionFormPage() {
         <div className="print-container" style={{ background: 'white', padding: '3rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', color: '#000', maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem', borderBottom: '2px solid #000', paddingBottom: '1rem' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>Device Inspection Checklist</h1>
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px', color: '#555' }}>Pemeriksaan kondisi aset {logoName}</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
@@ -77,17 +95,43 @@ export default function InspectionFormPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600 }}>Nama Aset</span>
-                <input type="text" style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} />
+                <input 
+                  type="text" 
+                  list="assets-list"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const selected = assets.find(a => a.hostname === val);
+                    if (selected) {
+                      setSerialNumber(selected.serialNumber || '');
+                    }
+                  }}
+                  style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} 
+                />
+                <datalist id="assets-list">
+                  {assets.map(a => (
+                    <option key={a.id} value={a.hostname}>{a.model || a.brand || ''}</option>
+                  ))}
+                </datalist>
               </div>
             </div>
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600 }}>Diperiksa Oleh</span>
-                <input type="text" style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} />
+                <input 
+                  type="text" 
+                  value={inspector}
+                  onChange={(e) => setInspector(e.target.value)}
+                  style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} 
+                />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600 }}>Serial Number</span>
-                <input type="text" style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} />
+                <input 
+                  type="text" 
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} 
+                />
               </div>
             </div>
           </div>
@@ -148,13 +192,36 @@ export default function InspectionFormPage() {
             </button>
           </div>
 
+          <div style={{ marginBottom: '2rem' }}>
+            <div className="no-print" style={{ marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '0.5rem' }}>Lampiran Foto Kerusakan:</h3>
+              <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ fontSize: '0.9rem' }} />
+            </div>
+            {images.length > 0 && (
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                {images.map((src, idx) => (
+                  <div key={idx} style={{ position: 'relative' }}>
+                    <img src={src} alt="Lampiran" style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ccc' }} />
+                    <button 
+                      className="no-print" 
+                      onClick={() => setImages(images.filter((_, i) => i !== idx))} 
+                      style={{ position: 'absolute', top: -10, right: -10, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div style={{ marginBottom: '3rem' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '0.5rem' }}>Kesimpulan Inspeksi:</h3>
             <textarea style={{ width: '100%', height: '80px', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', resize: 'none' }} placeholder="Tuliskan catatan tambahan atau rekomendasi di sini..."></textarea>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4rem', textAlign: 'center' }}>
-            <div>
+          <div style={{ textAlign: 'right', paddingTop: '4rem', paddingRight: '2rem', pageBreakInside: 'avoid', breakInside: 'avoid', borderTop: '1px solid transparent' }}>
+            <div style={{ display: 'inline-block', textAlign: 'center' }}>
               <p style={{ marginBottom: '5rem' }}>IT Support / Inspector<br/><span style={{ fontSize: '12px', color: '#666' }}>(Yang Memeriksa)</span></p>
               <p style={{ borderTop: '1px solid #000', paddingTop: '0.5rem', width: '200px', margin: '0 auto' }}>(........................................)</p>
             </div>

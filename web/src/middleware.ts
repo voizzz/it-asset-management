@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifySession } from './lib/session';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/login', '/api/auth/login', '/api/auth/logout', '/api/agent/report', '/api/agent/download'];
+const publicRoutes = ['/login', '/api/auth/login', '/api/auth/logout', '/api/agent/report', '/api/agent/download', '/submit-ticket', '/api/employees', '/api/tickets'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,15 +18,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow public routes
-  if (publicRoutes.includes(pathname)) {
-    return NextResponse.next();
-  }
-
-  // Check for session cookie
+  const isPublicRoute = publicRoutes.includes(pathname);
   const sessionCookie = request.cookies.get('session');
-  
+
   if (!sessionCookie) {
+    if (isPublicRoute) {
+      return NextResponse.next();
+    }
     return redirectToLogin(request);
   }
 
@@ -35,18 +33,27 @@ export async function middleware(request: NextRequest) {
   
   if (!payload) {
     // Session is invalid or expired
+    if (isPublicRoute) {
+      const response = NextResponse.next();
+      response.cookies.delete('session');
+      return response;
+    }
     const response = redirectToLogin(request);
     response.cookies.delete('session');
     return response;
   }
 
   // Pass user details in headers for API routes if needed
-  const response = NextResponse.next();
-  response.headers.set('x-user-id', payload.id);
-  response.headers.set('x-user-role', payload.role);
-  response.headers.set('x-user-name', payload.username);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-user-id', String(payload.id));
+  requestHeaders.set('x-user-role', String(payload.role));
+  requestHeaders.set('x-user-name', String(payload.username));
   
-  return response;
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    }
+  });
 }
 
 function redirectToLogin(request: NextRequest) {

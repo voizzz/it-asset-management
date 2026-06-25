@@ -33,6 +33,7 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
   });
   
   const [returnToScanId, setReturnToScanId] = useState<string | null>(null);
+  const [assignmentPage, setAssignmentPage] = useState(1);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -353,9 +354,9 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
           </div>
 
           <div className={styles.sectionTitle}>Assignment History</div>
-          <ul className={styles.list} style={{ maxHeight: '200px', overflowY: 'auto' }}>
+          <ul className={styles.list} style={{ maxHeight: 'none', overflowY: 'visible' }}>
             {assignments.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No assignment history</li>}
-            {assignments.map((a: any) => (
+            {assignments.slice((assignmentPage - 1) * 3, assignmentPage * 3).map((a: any) => (
               <li key={a.id} style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
                 <div style={{ fontWeight: 600 }}>{a.employeeName}</div>
                 <div suppressHydrationWarning style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -364,6 +365,27 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
               </li>
             ))}
           </ul>
+          {Math.ceil(assignments.length / 3) > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem' }}>
+              <button 
+                onClick={() => setAssignmentPage(p => Math.max(1, p - 1))}
+                disabled={assignmentPage === 1}
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: assignmentPage === 1 ? 'var(--bg-secondary)' : '#fff', cursor: assignmentPage === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                Previous
+              </button>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Page {assignmentPage} of {Math.ceil(assignments.length / 3)}
+              </span>
+              <button 
+                onClick={() => setAssignmentPage(p => Math.min(Math.ceil(assignments.length / 3), p + 1))}
+                disabled={assignmentPage === Math.ceil(assignments.length / 3)}
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: assignmentPage === Math.ceil(assignments.length / 3) ? 'var(--bg-secondary)' : '#fff', cursor: assignmentPage === Math.ceil(assignments.length / 3) ? 'not-allowed' : 'pointer' }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Card 6: Installed Software */}
@@ -511,12 +533,12 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>Status</label>
                     <select style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: '#f8fafc', color: 'var(--text-primary)', appearance: 'auto', outline: 'none', fontSize: '0.95rem', transition: 'border 0.2s' }} onFocus={e => e.target.style.borderColor = 'var(--accent-success)'} onBlur={e => e.target.style.borderColor = 'var(--border-color)'} value={editData.status} onChange={e => setEditData({...editData, status: e.target.value})}>
-                      <option value="online">Online</option>
-                      <option value="offline">Offline</option>
                       <option value="in-use">In Use</option>
-                      <option value="broken">Broken</option>
+                      <option value="spare">Spare (Available)</option>
+                      <option value="maintenance">Maintenance</option>
                       <option value="repair">Under Repair</option>
-                      <option value="spare">Spare</option>
+                      <option value="broken">Broken</option>
+                      <option value="retired">Retired / Disposed</option>
                     </select>
                   </div>
                 </div>
@@ -640,7 +662,7 @@ export default function AssetDetailClient({ agent, software = [], assignments = 
             <QRCodeSVG value={agent.id} size={100} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>ITAM ASSET</h2>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>IT Asset</h2>
             <p style={{ margin: 0, fontSize: '14px', color: '#333' }}><strong>ID:</strong> {agent.hostname}</p>
             <p style={{ margin: 0, fontSize: '14px', color: '#333' }}><strong>Type:</strong> {agent.category || 'PC'}</p>
             <p style={{ margin: 0, fontSize: '12px', color: '#666', marginTop: '5px' }}>Scan to manage asset</p>

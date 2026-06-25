@@ -84,27 +84,27 @@ export default function Sidebar({ logoName }: { logoName: string }) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </Link>
-        <Link href="/assets" className={`${styles.navItem} ${pathname === '/assets' ? styles.active : ''}`}>
+        <Link href="/assets" className={`${styles.navItem} ${safePathname.startsWith('/asset') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
           Assets
         </Link>
-        <Link href="/logs" className={`${styles.navItem} ${pathname === '/logs' ? styles.active : ''}`}>
+        <Link href="/logs" className={`${styles.navItem} ${safePathname.startsWith('/logs') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="M2 15h10"/><path d="M9 18l3-3-3-3"/></svg>
           Logs
         </Link>
-        <Link href="/employees" className={`${styles.navItem} ${pathname === '/employees' ? styles.active : ''}`}>
+        <Link href="/employees" className={`${styles.navItem} ${safePathname.startsWith('/employees') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           Employees
         </Link>
-        <Link href="/software" className={`${styles.navItem} ${pathname === '/software' ? styles.active : ''}`}>
+        <Link href="/software" className={`${styles.navItem} ${safePathname.startsWith('/software') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
           Software
         </Link>
-        <Link href="/consumables" className={`${styles.navItem} ${pathname === '/consumables' ? styles.active : ''}`}>
+        <Link href="/consumables" className={`${styles.navItem} ${safePathname.startsWith('/consumables') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
           Consumables
         </Link>
-        <Link href="/stock-opname" className={`${styles.navItem} ${pathname === '/stock-opname' ? styles.active : ''}`}>
+        <Link href="/stock-opname" className={`${styles.navItem} ${safePathname.startsWith('/stock-opname') ? styles.active : ''}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           Stock Opname
         </Link>
@@ -154,6 +154,8 @@ export default function Sidebar({ logoName }: { logoName: string }) {
               <a href="/reports#assets" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'assets' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Assets</a>
               <a href="/reports#tickets" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'tickets' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Ticketing</a>
               <a href="/reports#consumables" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'consumables' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Consumables</a>
+              <a href="/reports#software" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'software' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Software</a>
+              <a href="/reports#licenses" className={`${styles.navItem} ${pathname === '/reports' && activeReportHash === 'licenses' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Report Licenses</a>
             </div>
           )}
         </div>
@@ -181,11 +183,11 @@ export default function Sidebar({ logoName }: { logoName: string }) {
             </div>
           )}
         </div>
-        
-        <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingBottom: '1rem', position: 'relative', zIndex: 10 }}>
-          <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
-        </div>
       </nav>
+
+      <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', position: 'relative', zIndex: 10 }}>
+        <LogoutButton className={styles.actionBtn} style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }} />
+      </div>
     </aside>
   );
 }

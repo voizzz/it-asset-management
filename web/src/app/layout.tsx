@@ -42,6 +42,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+import ToastContainer from "@/components/Toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -56,6 +58,7 @@ export default function RootLayout({
         <div className="app-container">
           {children}
         </div>
+        <ToastContainer />
         <Script id="register-sw" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {

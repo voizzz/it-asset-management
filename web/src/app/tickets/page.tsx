@@ -143,7 +143,11 @@ export default function TicketsPage() {
                           </span>
                         </td>
                         <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                          <div style={{ fontWeight: 600 }}>{ticket.employeeName || '-'}</div>
+                          <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {ticket.employeeName ? ticket.employeeName : (
+                              <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Guest</span>
+                            )}
+                          </div>
                           <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>{ticket.agentHostname || '-'}</div>
                         </td>
                         <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{ticket.category || '-'}</td>

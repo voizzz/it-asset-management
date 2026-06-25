@@ -20,10 +20,12 @@ export default function TicketDetailPage() {
 
   // Edit states
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ status: '', priority: '' });
+  const [editForm, setEditForm] = useState({ status: '', priority: '', agentId: '' });
+  const [assets, setAssets] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/settings/get').then(r => r.json()).then(d => { if (d.logoName) setLogoName(d.logoName); });
+    fetch('/api/assets/list').then(r => r.json()).then(d => setAssets(d.assets || []));
     if (params.id) {
       fetchTicketData();
     }
@@ -39,7 +41,7 @@ export default function TicketDetailPage() {
       const data = await res.json();
       if (data.ticket) {
         setTicket(data.ticket);
-        setEditForm({ status: data.ticket.status, priority: data.ticket.priority });
+        setEditForm({ status: data.ticket.status, priority: data.ticket.priority, agentId: data.ticket.agentId || '' });
       }
 
       const commentsRes = await fetch(`/api/tickets/${params.id}/comments`);
@@ -62,10 +64,11 @@ export default function TicketDetailPage() {
 
   const handleUpdateTicket = async () => {
     try {
+      const payload = { ...editForm, agentId: editForm.agentId || null };
       await fetch(`/api/tickets/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify(payload)
       });
       setIsEditing(false);
       fetchTicketData();
@@ -341,14 +344,23 @@ export default function TicketDetailPage() {
                   )}
                 </div>
 
-                {ticket.agentId && (
-                  <div>
-                    <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>Related Asset</span>
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>Related Asset</span>
+                  {isEditing ? (
+                    <select value={editForm.agentId || ''} onChange={e => setEditForm({...editForm, agentId: e.target.value})} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                      <option value="">-- No Specific Asset / General --</option>
+                      {assets.map(a => (
+                        <option key={a.id} value={a.id}>{a.hostname} ({a.category})</option>
+                      ))}
+                    </select>
+                  ) : ticket.agentId ? (
                     <Link href={`/asset/${ticket.agentId}`} style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 600 }}>
                       {ticket.agentHostname || 'Asset Details'}
                     </Link>
-                  </div>
-                )}
+                  ) : (
+                    <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>- Umum / No Asset -</span>
+                  )}
+                </div>
                 
                 {ticket.employeeId && (
                   <div>

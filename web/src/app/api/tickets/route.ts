@@ -7,6 +7,16 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
     const priority = url.searchParams.get('priority');
+    const employeeId = url.searchParams.get('employeeId');
+    const reporterName = url.searchParams.get('reporterName');
+
+    const userId = request.headers.get('x-user-id');
+
+    if (!userId) {
+      if (!employeeId && !reporterName) {
+        return NextResponse.json({ error: 'Unauthorized access. Bulk data extraction is prohibited.' }, { status: 401 });
+      }
+    }
 
     let query = `
       SELECT t.*, 
@@ -18,6 +28,14 @@ export async function GET(request: Request) {
       WHERE 1=1
     `;
     const params: any[] = [];
+
+    if (employeeId) {
+      query += ` AND t.employeeId = ?`;
+      params.push(employeeId);
+    } else if (reporterName) {
+      query += ` AND t.employeeId IS NULL AND t.description LIKE ?`;
+      params.push(`%[Reported by: ${reporterName}]%`);
+    }
 
     if (status) {
       query += ` AND t.status = ?`;

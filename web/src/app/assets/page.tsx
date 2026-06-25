@@ -54,7 +54,7 @@ export default function AssetsPage() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 15;
+  const ITEMS_PER_PAGE = 12;
   const [showScanner, setShowScanner] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isImporting, setIsImporting] = useState(false);
@@ -360,7 +360,7 @@ export default function AssetsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {['HOSTNAME', 'CATEGORY', 'SERIAL NUMBER', 'USER', 'TYPE', 'STATUS', 'ACTION'].map(col => (
+                  {['ASSET NAME', 'CATEGORY', 'SERIAL NUMBER', 'USER', 'TYPE', 'STATUS', 'ACTION'].map(col => (
                     <th key={col} style={{ padding: '1rem', fontWeight: 700 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {col}
@@ -374,7 +374,7 @@ export default function AssetsPage() {
                 {filteredAgents.length === 0 ? (
                   <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No assets found.</td></tr>
                 ) : (
-                  filteredAgents.map(agent => (
+                  filteredAgents.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map(agent => (
                     <tr key={agent.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'} onClick={() => router.push(`/asset/${agent.id}`)}>
                       <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{agent.hostname}</td>
                       <td style={{ padding: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.03em' }}>{agent.category || 'PC'}</td>
@@ -685,7 +685,7 @@ export default function AssetsPage() {
               <QRCodeSVG value={agent.id} size={80} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>ITAM ASSET</h2>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>IT Asset</h2>
               <p style={{ margin: 0, fontSize: '12px', color: '#333' }}><strong>ID:</strong> {agent.hostname}</p>
               <p style={{ margin: 0, fontSize: '12px', color: '#333' }}><strong>Type:</strong> {agent.category || 'PC'}</p>
               <p style={{ margin: 0, fontSize: '10px', color: '#666', marginTop: '4px' }}>Scan to manage</p>

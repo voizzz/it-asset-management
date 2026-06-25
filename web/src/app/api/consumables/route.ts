@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     if (data.action === 'add') {
       const id = require('crypto').randomUUID();
       await db.run(
-        `INSERT INTO Consumable (id, name, category, quantity, minQuantity, location, notes) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [id, data.name, data.category || 'Toner', data.quantity || 0, data.minQuantity || 0, data.location || '', data.notes || '']
+        `INSERT INTO Consumable (id, name, category, quantity, minQuantity, location, notes, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, data.name, data.category || 'Toner', data.quantity || 0, data.minQuantity || 0, data.location || '', data.notes || '', data.unit || 'pcs']
       );
       return NextResponse.json({ success: true, id });
     }
@@ -39,8 +39,8 @@ export async function POST(request: Request) {
     }
     if (data.action === 'edit') {
       await db.run(
-        `UPDATE Consumable SET name = ?, category = ?, minQuantity = ?, location = ?, notes = ? WHERE id = ?`,
-        [data.name, data.category, data.minQuantity, data.location, data.notes, data.id]
+        `UPDATE Consumable SET name = ?, category = ?, minQuantity = ?, location = ?, notes = ?, unit = ? WHERE id = ?`,
+        [data.name, data.category, data.minQuantity, data.location, data.notes, data.unit || 'pcs', data.id]
       );
       return NextResponse.json({ success: true });
     }

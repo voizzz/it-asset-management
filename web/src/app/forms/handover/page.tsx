@@ -5,9 +5,18 @@ import Sidebar from '@/components/Sidebar';
 
 export default function HandoverFormPage() {
   const [logoName, setLogoName] = useState('ITAM');
+  const [assets, setAssets] = useState<any[]>([]);
+  const [category, setCategory] = useState('');
+  const [model, setModel] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [handoverDate, setHandoverDate] = useState('');
+
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
   useEffect(() => {
     fetch('/api/settings/get').then(r => r.json()).then(d => { if (d.logoName) setLogoName(d.logoName); });
+    fetch('/api/assets/list').then(r => r.json()).then(d => setAssets(d.assets || []));
   }, []);
 
   const handlePrint = () => {
@@ -54,11 +63,20 @@ export default function HandoverFormPage() {
         <div className="print-container" style={{ background: 'white', padding: '3rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', color: '#000', maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem', borderBottom: '2px solid #000', paddingBottom: '1rem' }}>
             <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>Berita Acara Serah Terima Barang</h1>
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '14px', color: '#555' }}>Dokumen resmi serah terima aset {logoName}</p>
+          </div>
+
+          <div className="no-print" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span style={{ fontWeight: 600 }}>Pilih Tanggal:</span>
+            <input 
+              type="date" 
+              value={handoverDate}
+              onChange={(e) => setHandoverDate(e.target.value)}
+              style={{ border: '1px solid #ccc', padding: '0.5rem', borderRadius: '4px', fontSize: '15px' }} 
+            />
           </div>
 
           <div style={{ marginBottom: '2rem', fontSize: '15px', lineHeight: '1.6' }}>
-            <p>Pada hari ini _______________________ tanggal _______________________ bulan _______________________ tahun _______________________, telah dilakukan serah terima barang dengan rincian sebagai berikut:</p>
+            <p>Pada hari ini {handoverDate ? <strong>{days[new Date(handoverDate).getDay()]}</strong> : '_______________________'} tanggal {handoverDate ? <strong>{new Date(handoverDate).getDate()}</strong> : '_______________________'} bulan {handoverDate ? <strong>{months[new Date(handoverDate).getMonth()]}</strong> : '_______________________'} tahun {handoverDate ? <strong>{new Date(handoverDate).getFullYear()}</strong> : '_______________________'}, telah dilakukan serah terima barang dengan rincian sebagai berikut:</p>
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
@@ -88,16 +106,54 @@ export default function HandoverFormPage() {
           <div style={{ marginBottom: '3rem' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 'bold', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Detail Barang / Aset</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+              <span style={{ fontWeight: 600 }}>Nama Aset</span>
+              <input 
+                type="text" 
+                list="assets-list"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const selected = assets.find(a => a.hostname === val);
+                  if (selected) {
+                    setCategory(selected.category || '');
+                    setModel(selected.model || selected.brand || '');
+                    setSerialNumber(selected.serialNumber || '');
+                  }
+                }}
+                style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} 
+              />
+              <datalist id="assets-list">
+                {assets.map(a => (
+                  <option key={a.id} value={a.hostname}>{a.model || a.brand || ''}</option>
+                ))}
+              </datalist>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
               <span style={{ fontWeight: 600 }}>Kategori Aset</span>
-              <input type="text" style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} placeholder="Laptop, PC, Monitor, dll" />
+              <input 
+                type="text" 
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} 
+                placeholder="Laptop, PC, Monitor, dll" 
+              />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
               <span style={{ fontWeight: 600 }}>Merk / Model</span>
-              <input type="text" style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} />
+              <input 
+                type="text" 
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} 
+              />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
               <span style={{ fontWeight: 600 }}>Serial Number</span>
-              <input type="text" style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} />
+              <input 
+                type="text" 
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+                style={{ border: 'none', borderBottom: '1px dotted #999', width: '100%', outline: 'none', fontSize: '15px' }} 
+              />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
               <span style={{ fontWeight: 600 }}>Kelengkapan</span>
