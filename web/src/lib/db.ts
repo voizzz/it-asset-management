@@ -153,6 +153,13 @@ export function getDb(): Promise<Database> {
           changedAt DATETIME
         );
 
+        CREATE TABLE IF NOT EXISTS TicketOTP (
+          email TEXT PRIMARY KEY,
+          otpCode TEXT,
+          expiresAt DATETIME,
+          verified BOOLEAN DEFAULT 0
+        );
+
         CREATE TABLE IF NOT EXISTS Attachment (
           id TEXT PRIMARY KEY,
           entityType TEXT,

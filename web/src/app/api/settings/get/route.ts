@@ -11,9 +11,22 @@ export async function GET() {
     
     return NextResponse.json({ 
       logoName: settings.logoName || 'ITAM',
-      serverUrl: settings.serverUrl || 'http://localhost:3000/api/agent/report'
+      serverUrl: settings.serverUrl || 'http://localhost:3000/api/agent/report',
+      logRetentionDays: settings.logRetentionDays || '30',
+      smtpHost: settings.smtpHost || '',
+      smtpPort: settings.smtpPort || '',
+      smtpUser: settings.smtpUser || '',
+      smtpPass: settings.smtpPass || ''
     });
   } catch (e) {
-    return NextResponse.json({ logoName: 'ITAM', serverUrl: 'http://localhost:3000/api/agent/report' });
+    return NextResponse.json({ 
+      logoName: 'ITAM', 
+      serverUrl: 'http://localhost:3000/api/agent/report',
+      logRetentionDays: '30',
+      smtpHost: '',
+      smtpPort: '',
+      smtpUser: '',
+      smtpPass: ''
+    });
   }
 }

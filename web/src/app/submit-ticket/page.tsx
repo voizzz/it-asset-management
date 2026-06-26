@@ -14,8 +14,15 @@ export default function SubmitTicketPage() {
     employeeId: '',
     agentId: '',
     reporterName: '', // For users not in the system
-    assetId: ''
+    assetId: '',
+    email: '',
+    otp: ''
   });
+
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [requestingOtp, setRequestingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -30,14 +37,17 @@ export default function SubmitTicketPage() {
     fetch('/api/employees').then(res => res.json()).then(data => setEmployees(data.employees || []));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    // If user provided a manual reporter name but didn't select an employee, prepend it to description
+  const createTicket = async () => {
     let finalDescription = formData.description;
+    let reporterInfo = [];
     if (!formData.employeeId && formData.reporterName) {
-      finalDescription = `[Reported by: ${formData.reporterName}]\n\n${finalDescription}`;
+      reporterInfo.push(`[Reported by: ${formData.reporterName}]`);
+    }
+    if (formData.email) {
+      reporterInfo.push(`[Email: ${formData.email}]`);
+    }
+    if (reporterInfo.length > 0) {
+      finalDescription = `${reporterInfo.join('\n')}\n\n${finalDescription}`;
     }
 
     try {
@@ -50,21 +60,90 @@ export default function SubmitTicketPage() {
           category: formData.category,
           priority: formData.priority,
           employeeId: formData.employeeId || null,
-          agentId: formData.agentId || null
+          email: formData.email
         })
       });
 
       if (res.ok) {
         setSuccess(true);
         setFormData({
-          title: '', description: '', category: 'Hardware', priority: 'Medium', employeeId: '', agentId: '', reporterName: ''
+          title: '', description: '', category: 'Hardware', priority: 'Medium', employeeId: '', agentId: '', reporterName: '', email: '', otp: ''
         });
+        setOtpSent(false);
+        setOtpVerified(false);
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to submit ticket: ${errorData.error || 'Unknown error'}`);
       }
     } catch (err) {
       console.error(err);
       alert('Failed to submit ticket');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.email) {
+      alert("Email is required.");
+      return;
+    }
+
+    setLoading(true);
+
+    if (!otpVerified) {
+      // Send OTP
+      try {
+        const res = await fetch('/api/tickets/otp/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email })
+        });
+        if (res.ok) {
+          setOtpSent(true);
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to send OTP");
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Error requesting OTP");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // If somehow it's already verified, just submit
+    await createTicket();
+  };
+
+
+
+  const handleVerifyOTP = async () => {
+    if (!formData.otp) return;
+    setVerifyingOtp(true);
+    try {
+      const res = await fetch('/api/tickets/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, otp: formData.otp })
+      });
+      if (res.ok) {
+        setOtpVerified(true);
+        setLoading(true);
+        await createTicket();
+      } else {
+        const err = await res.json();
+        alert(err.error || "Invalid OTP");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error verifying OTP");
+    } finally {
+      setVerifyingOtp(false);
     }
   };
 
@@ -186,7 +265,8 @@ export default function SubmitTicketPage() {
         </div>
 
         {viewMode === 'submit' ? (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           
           <div style={rowStyle}>
             <div style={formGroupStyle}>
@@ -194,7 +274,16 @@ export default function SubmitTicketPage() {
               <select 
                 style={inputStyle} 
                 value={formData.employeeId} 
-                onChange={e => setFormData({...formData, employeeId: e.target.value})}
+                onChange={e => {
+                  const emp = employees.find(x => x.id === e.target.value);
+                  setFormData({
+                    ...formData, 
+                    employeeId: e.target.value, 
+                    email: emp ? (emp.email || '') : ''
+                  });
+                  setOtpSent(false);
+                  setOtpVerified(false);
+                }}
               >
                 <option value="">-- I am not in the list --</option>
                 {employees.map(emp => (
@@ -213,11 +302,32 @@ export default function SubmitTicketPage() {
                   placeholder="Enter your full name"
                   value={formData.reporterName}
                   onChange={e => setFormData({...formData, reporterName: e.target.value})}
+                  disabled={otpVerified}
                 />
               </div>
             )}
           </div>
 
+          <div style={formGroupStyle}>
+            <label style={labelStyle}>Your Email (Verification required to submit)</label>
+            <input 
+              type="email" 
+              required
+              className="modern-input"
+              style={inputStyle} 
+              placeholder="employee@company.com"
+              value={formData.email}
+              onChange={e => setFormData({...formData, email: e.target.value})}
+              readOnly={!!formData.employeeId}
+            />
+          </div>
+
+          {otpVerified && (
+            <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Email Verified Successfully
+            </div>
+          )}
 
           <div style={formGroupStyle}>
             <label style={labelStyle}>Issue Title</label>
@@ -264,10 +374,8 @@ export default function SubmitTicketPage() {
             </div>
           </div>
 
-
-
           <div style={formGroupStyle}>
-            <label style={labelStyle}>Detailed Description</label>
+            <label style={labelStyle}>Description of the Issue</label>
             <textarea 
               required
               rows={5}
@@ -282,12 +390,56 @@ export default function SubmitTicketPage() {
           <button 
             type="submit" 
             disabled={loading}
+            style={loading ? { ...primaryBtnStyle, opacity: 0.6, cursor: 'not-allowed' } : primaryBtnStyle}
             className="modern-btn"
-            style={primaryBtnStyle}
           >
-            {loading ? 'Submitting...' : 'Submit Ticket'}
+            {loading ? 'Processing...' : 'Submit Ticket'}
           </button>
         </form>
+
+        {/* OTP Verification Modal */}
+        {otpSent && !otpVerified && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+            <div style={{ background: '#fff', padding: '2rem', borderRadius: '16px', maxWidth: '400px', width: '90%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s ease' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#0f172a', fontSize: '1.25rem' }}>Verify Your Email</h3>
+              <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                An OTP has been sent to <strong>{formData.email}</strong>. Please enter the 6-digit code below to confirm your ticket submission.
+              </p>
+              
+              <div style={formGroupStyle}>
+                <input 
+                  type="text" 
+                  maxLength={6}
+                  autoFocus
+                  className="modern-input"
+                  style={{...inputStyle, letterSpacing: '8px', fontSize: '1.5rem', textAlign: 'center', padding: '1rem'}} 
+                  placeholder="------"
+                  value={formData.otp}
+                  onChange={e => setFormData({...formData, otp: e.target.value})}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setOtpSent(false)}
+                  style={{...primaryBtnStyle, background: '#f1f5f9', color: '#475569', boxShadow: 'none', marginTop: 0}}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleVerifyOTP}
+                  disabled={verifyingOtp || formData.otp.length < 6}
+                  style={{...primaryBtnStyle, marginTop: 0, ...(verifyingOtp || formData.otp.length < 6 ? {opacity: 0.6, cursor: 'not-allowed'} : {})}}
+                >
+                  {verifyingOtp ? 'Verifying...' : 'Verify & Submit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        </>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={rowStyle}>
@@ -418,30 +570,30 @@ const cardStyle: React.CSSProperties = {
   background: '#ffffff',
   border: '1px solid #e2e8f0',
   borderRadius: '24px',
-  padding: '3rem',
+  padding: '2rem',
   boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.05)',
 };
 
 const headerStyle: React.CSSProperties = {
   textAlign: 'center',
-  marginBottom: '2.5rem'
+  marginBottom: '1.5rem'
 };
 
 const iconWrapperStyle: React.CSSProperties = {
-  width: '56px',
-  height: '56px',
+  width: '48px',
+  height: '48px',
   background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
   borderRadius: '16px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  margin: '0 auto 1rem',
+  margin: '0 auto 0.5rem',
   color: 'white',
   boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)'
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: '2rem',
+  fontSize: '1.5rem',
   fontWeight: 800,
   margin: '0 0 0.5rem 0',
   color: '#0f172a',
@@ -451,19 +603,19 @@ const titleStyle: React.CSSProperties = {
 const subtitleStyle: React.CSSProperties = {
   color: '#64748b',
   margin: 0,
-  fontSize: '1rem'
+  fontSize: '0.9rem'
 };
 
 const rowStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
-  gap: '1.25rem'
+  gap: '0.85rem'
 };
 
 const formGroupStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.5rem',
+  gap: '0.35rem',
   flex: 1
 };
 
@@ -478,12 +630,12 @@ const labelStyle: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  padding: '1rem',
+  padding: '0.75rem',
   background: '#f8fafc',
   border: '1px solid #cbd5e1',
   borderRadius: '12px',
   color: '#0f172a',
-  fontSize: '1rem',
+  fontSize: '0.9rem',
   fontFamily: 'inherit',
   outline: 'none',
   transition: 'all 0.2s ease',
@@ -492,12 +644,12 @@ const inputStyle: React.CSSProperties = {
 
 const primaryBtnStyle: React.CSSProperties = {
   width: '100%',
-  padding: '1rem',
+  padding: '0.8rem',
   background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
   color: 'white',
   border: 'none',
   borderRadius: '12px',
-  fontSize: '1.1rem',
+  fontSize: '1rem',
   fontWeight: 600,
   cursor: 'pointer',
   transition: 'transform 0.2s ease, box-shadow 0.2s ease',

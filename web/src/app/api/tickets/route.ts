@@ -55,10 +55,28 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+  export async function POST(request: Request) {
   try {
     const db = await getDb();
     const data = await request.json();
+    
+    // Validate OTP
+    if (!data.email) {
+      return NextResponse.json({ error: 'Email is required for OTP verification' }, { status: 400 });
+    }
+
+    const otpRecord = await db.get(`SELECT verified, expiresAt FROM TicketOTP WHERE email = ?`, [data.email]);
+    if (!otpRecord || !otpRecord.verified) {
+      return NextResponse.json({ error: `Email has not been verified via OTP. Debug: email=${data.email}, otpRecord=${JSON.stringify(otpRecord)}` }, { status: 403 });
+    }
+
+    const nowTime = new Date();
+    // Allow a bit of leeway (e.g., 30 mins after expiry) for them to fill out the form
+    const formExpiry = new Date(new Date(otpRecord.expiresAt).getTime() + 30 * 60 * 1000); 
+    if (nowTime > formExpiry) {
+      return NextResponse.json({ error: 'OTP session expired. Please verify your email again.' }, { status: 403 });
+    }
+
     const id = require('crypto').randomUUID();
     const now = new Date().toISOString();
     

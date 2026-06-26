@@ -49,44 +49,59 @@ export default function EmployeesPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch('/api/employees', {
+      const res = await fetch('/api/employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEmployee)
       });
-      setShowAdd(false);
-      setNewEmployee({ name: '', department: '', email: '' });
-      fetchEmployees();
-      toast.success('Employee added successfully');
+      const data = await res.json();
+      if (res.ok) {
+        setShowAdd(false);
+        setNewEmployee({ name: '', department: '', email: '' });
+        fetchEmployees();
+        toast.success('Employee added successfully');
+      } else {
+        toast.error(data.error || 'Failed to add employee');
+      }
     } catch (e) {
-      toast.error('Failed to add employee');
+      toast.error('Network error. Failed to add employee');
     }
   };
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch(`/api/employees/${editEmployee.id}`, {
+      const res = await fetch(`/api/employees/${editEmployee.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editEmployee)
       });
-      setShowEdit(false);
-      fetchEmployees();
-      toast.success('Employee updated successfully');
+      const data = await res.json();
+      if (res.ok) {
+        setShowEdit(false);
+        fetchEmployees();
+        toast.success('Employee updated successfully');
+      } else {
+        toast.error(data.error || 'Failed to edit employee');
+      }
     } catch (e) {
-      toast.error('Failed to edit employee');
+      toast.error('Network error. Failed to edit employee');
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this employee?')) return;
     try {
-      await fetch(`/api/employees/${id}`, { method: 'DELETE' });
-      fetchEmployees();
-      toast.success('Employee deleted successfully');
+      const res = await fetch(`/api/employees/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        fetchEmployees();
+        toast.success('Employee deleted successfully');
+      } else {
+        toast.error(data.error || 'Failed to delete employee');
+      }
     } catch (e) {
-      toast.error('Failed to delete employee');
+      toast.error('Network error. Failed to delete employee');
     }
   };
 

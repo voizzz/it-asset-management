@@ -14,6 +14,12 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [isRestoring, setIsRestoring] = useState(false);
   
+  // OTP Settings State
+  const [smtpHost, setSmtpHost] = useState('');
+  const [smtpPort, setSmtpPort] = useState('');
+  const [smtpUser, setSmtpUser] = useState('');
+  const [smtpPass, setSmtpPass] = useState('');
+  
   // Current User State
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [myUsername, setMyUsername] = useState('');
@@ -50,6 +56,10 @@ export default function SettingsPage() {
         if (data.logoName) setLogoName(data.logoName);
         if (data.serverUrl) setServerUrl(data.serverUrl);
         if (data.logRetentionDays) setLogRetentionDays(data.logRetentionDays);
+        if (data.smtpHost) setSmtpHost(data.smtpHost);
+        if (data.smtpPort) setSmtpPort(data.smtpPort);
+        if (data.smtpUser) setSmtpUser(data.smtpUser);
+        if (data.smtpPass) setSmtpPass(data.smtpPass);
       });
       
     fetchUsers();
@@ -92,6 +102,13 @@ export default function SettingsPage() {
         body: JSON.stringify({ key: 'logRetentionDays', value: logRetentionDays }),
       });
       if (!res3.ok) throw new Error('Failed to save logRetentionDays');
+
+      // Save OTP settings
+      await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'smtpHost', value: smtpHost }) });
+      await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'smtpPort', value: smtpPort }) });
+      await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'smtpUser', value: smtpUser }) });
+      await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'smtpPass', value: smtpPass }) });
+
       alert('Settings saved!');
       window.location.reload(); 
     } catch (e) {
@@ -346,6 +363,68 @@ export default function SettingsPage() {
                 </div>
               )}
 
+              {activeTab === 'otp' && (
+                <div id="otp" className={styles.tableSection}>
+                  <h2>Email & OTP Configuration</h2>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Configure SMTP settings for sending OTP codes via email.</p>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', maxWidth: '800px', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>SMTP Host</label>
+                      <input 
+                        type="text" 
+                        value={smtpHost} 
+                        onChange={(e) => setSmtpHost(e.target.value)}
+                        className={styles.search}
+                        placeholder="e.g. smtp.gmail.com"
+                      />
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>SMTP Port</label>
+                      <input 
+                        type="text" 
+                        value={smtpPort} 
+                        onChange={(e) => setSmtpPort(e.target.value)}
+                        className={styles.search}
+                        placeholder="e.g. 587 or 465"
+                      />
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>SMTP Email (User)</label>
+                      <input 
+                        type="email" 
+                        value={smtpUser} 
+                        onChange={(e) => setSmtpUser(e.target.value)}
+                        className={styles.search}
+                        placeholder="your-email@gmail.com"
+                      />
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>SMTP Password</label>
+                      <input 
+                        type="password" 
+                        value={smtpPass} 
+                        onChange={(e) => setSmtpPass(e.target.value)}
+                        className={styles.search}
+                        placeholder="App password or standard password"
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={saveSettings} 
+                    className={styles.actionBtn} 
+                    disabled={isSaving}
+                    style={{ padding: '0.75rem 2rem', background: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', color: 'white', marginBottom: '2rem' }}
+                  >
+                    {isSaving ? 'Saving...' : 'Save Email Settings'}
+                  </button>
+                </div>
+              )}
+
               {activeTab === 'account' && users.length > 0 && (
                 <div id="account" className={styles.tableSection}>
                   <h2>Account Management</h2>
@@ -394,6 +473,13 @@ export default function SettingsPage() {
                 </div>
               )}
             </>
+          )}
+
+          {currentUser && currentUser.role !== 'admin' && (
+            <div style={{ padding: '3rem', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '2rem' }}>
+              <h3 style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Access Denied</h3>
+              <p style={{ color: 'var(--text-muted)' }}>You must be an administrator to view and modify settings.</p>
+            </div>
           )}
         </section>
 

@@ -179,6 +179,7 @@ export default function Sidebar({ logoName }: { logoName: string }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
               <a href="/settings#general" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'general' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>General Config</a>
               <a href="/settings#agent" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'agent' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Agent Config</a>
+              <a href="/settings#otp" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'otp' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Email / OTP</a>
               <a href="/settings#account" className={`${styles.navItem} ${pathname === '/settings' && activeHash === 'account' ? styles.active : ''}`} style={{ padding: '0.5rem 1rem 0.5rem 3.2rem', fontSize: '0.85rem' }}>Accounts</a>
             </div>
           )}

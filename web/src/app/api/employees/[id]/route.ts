@@ -36,13 +36,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: 'Cannot delete employee with active asset assignments.' }, { status: 400 });
     }
 
-    const activeTickets = await db.get(`
-      SELECT COUNT(*) as count FROM Ticket WHERE employeeId = ? AND status IN ('Open', 'In Progress')
-    `, [resolvedParams.id]);
-
-    if (activeTickets && activeTickets.count > 0) {
-      return NextResponse.json({ error: 'Cannot delete employee with active tickets.' }, { status: 400 });
+    // Preserve employee identity in tickets before deleting them
+    const emp = await db.get(`SELECT name, email FROM Employee WHERE id = ?`, [resolvedParams.id]);
+    if (emp) {
+      const legacyInfo = `[Original Reporter (Deleted Employee): ${emp.name} | Email: ${emp.email || '-'}]\\n\\n`;
+      await db.run(`UPDATE Ticket SET description = ? || description WHERE employeeId = ?`, [legacyInfo, resolvedParams.id]);
     }
+
+    // Unlink any tickets associated with this employee so they become guest tickets
+    await db.run(`UPDATE Ticket SET employeeId = NULL WHERE employeeId = ?`, [resolvedParams.id]);
 
     await db.run(`DELETE FROM Employee WHERE id = ?`, [resolvedParams.id]);
     

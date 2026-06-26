@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifySession } from './lib/session';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/login', '/api/auth/login', '/api/auth/logout', '/api/agent/report', '/api/agent/download', '/submit-ticket', '/api/employees', '/api/tickets'];
+const publicRoutes = ['/login', '/api/auth/login', '/api/auth/logout', '/api/agent/report', '/api/agent/download', '/submit-ticket', '/api/employees', '/api/tickets', '/api/tickets/otp/request', '/api/tickets/otp/verify'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
